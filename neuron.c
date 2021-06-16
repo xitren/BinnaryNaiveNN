@@ -33,7 +33,7 @@
     static neuron hidden7[LAYER_VII_NEURONS];
     static float hidden7_weights[LAYER_VII_NEURONS][LAYER_VI_NEURONS];
 #endif
-    
+
 void nn_initialize(network net, activation_f activator)
 {
     int i;
@@ -49,13 +49,16 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[0] = hidden1;
     for (i = 0;i < LAYER_I_NEURONS;i++)
     {
+        net.hidden[0][i]->ni = INPUTS;
         net.hidden[0][i]->activator = activator;
         net.hidden[0][i]->inputs = 0;
         net.hidden[0][i]->weights = hidden1_weights[i];
 #if (LAYER_II_NEURONS > 0)
         net.hidden[0][i]->output = hidden2;
+        net.hidden[0][i]->no = LAYER_II_NEURONS;
 #else
         net.hidden[0][i]->output = 0;
+        net.hidden[0][i]->no = 0;
 #endif
     }
 #endif
@@ -63,8 +66,9 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[1] = hidden2;
     for (i = 0;i < LAYER_II_NEURONS;i++)
     {
+        net.hidden[1][i]->ni = LAYER_I_NEURONS;
         net.hidden[1][i]->activator = activator;
-        net.hidden[1][i]->inputs = 0;
+        net.hidden[1][i]->inputs = hidden1;
         net.hidden[1][i]->weights = hidden2_weights[i];
 #if (LAYER_III_NEURONS > 0)
         net.hidden[1][i]->output = hidden3;
@@ -77,8 +81,9 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[2] = hidden3;
     for (i = 0;i < LAYER_III_NEURONS;i++)
     {
+        net.hidden[2][i]->ni = LAYER_II_NEURONS;
         net.hidden[2][i]->activator = activator;
-        net.hidden[2][i]->inputs = 0;
+        net.hidden[2][i]->inputs = hidden2;
         net.hidden[2][i]->weights = hidden3_weights[i];
 #if (LAYER_IV_NEURONS > 0)
         net.hidden[2][i]->output = hidden4;
@@ -91,8 +96,9 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[3] = hidden4;
     for (i = 0;i < LAYER_IV_NEURONS;i++)
     {
+        net.hidden[3][i]->ni = LAYER_III_NEURONS;
         net.hidden[3][i]->activator = activator;
-        net.hidden[3][i]->inputs = 0;
+        net.hidden[3][i]->inputs = hidden3;
         net.hidden[3][i]->weights = hidden4_weights[i];
 #if (LAYER_V_NEURONS > 0)
         net.hidden[3][i]->output = hidden5;
@@ -105,8 +111,9 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[4] = hidden5;
     for (i = 0;i < LAYER_V_NEURONS;i++)
     {
+        net.hidden[4][i]->ni = LAYER_IV_NEURONS;
         net.hidden[4][i]->activator = activator;
-        net.hidden[4][i]->inputs = 0;
+        net.hidden[4][i]->inputs = hidden4;
         net.hidden[4][i]->weights = hidden5_weights[i];
 #if (LAYER_VI_NEURONS > 0)
         net.hidden[4][i]->output = hidden6;
@@ -119,8 +126,9 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[5] = hidden6;
     for (i = 0;i < LAYER_VI_NEURONS;i++)
     {
+        net.hidden[5][i]->ni = LAYER_V_NEURONS;
         net.hidden[5][i]->activator = activator;
-        net.hidden[5][i]->inputs = 0;
+        net.hidden[5][i]->inputs = hidden5;
         net.hidden[5][i]->weights = hidden6_weights[i];
 #if (LAYER_VII_NEURONS > 0)
         net.hidden[5][i]->output = hidden7;
@@ -133,10 +141,47 @@ void nn_initialize(network net, activation_f activator)
     net.hidden[6] = hidden7;
     for (i = 0;i < LAYER_VII_NEURONS;i++)
     {
+        net.hidden[6][i]->ni = LAYER_VI_NEURONS;
         net.hidden[6][i]->activator = activator;
-        net.hidden[6][i]->inputs = 0;
+        net.hidden[6][i]->inputs = hidden6;
         net.hidden[6][i]->weights = hidden7_weights[i];
         net.hidden[6][i]->output = 0;
     }
 #endif
+}
+
+void nn_inference(network net)
+{
+    size_t i,j,k;
+    float sum;
+    for (i = 0;i < LAYERS;i++)
+    {
+        neuron *line;
+        line = net.hidden[i];
+        for (j = 0;j < hidden_cnt[i];j++)
+        {
+            neuron one;
+            one = line[j];
+            sum = 0.0f;
+            if (one.inputs)
+            {
+                for (k = 0;k < one.ni;k++)
+                {
+                    sum += one.inputs[k] * one.weights[k];
+                }
+            }
+            else
+            {
+                for (k = 0;k < INPUTS;k++)
+                {
+                    sum += net.inputs[k] * one.weights[k];
+                }
+            }
+            one.output = one.activator(one);
+            if (!one.outputs)
+            {
+                net.outputs[j] = one.outputs;
+            }
+        }
+    }
 }
