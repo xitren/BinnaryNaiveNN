@@ -57,6 +57,8 @@ typedef struct _tag_neuron {
     neuron* inputs;
     // Number of inputs.
     size_t ni;
+    // Bias value
+    float bias;
     // Activation function.
     activation_f activator;
     // Propagation id.
@@ -104,6 +106,7 @@ typedef struct _tag_network {
 
 void nn_initialize(network net, activation_f activator);
 void nn_inference(network net);
+float nn_sigma_activation(const neuron one);
 
 #ifdef __cplusplus
 }

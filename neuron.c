@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "utilities.h"
 
 #if (LAYER_I_NEURONS > 0)
     static neuron hidden1[LAYER_I_NEURONS];
@@ -153,7 +154,6 @@ void nn_initialize(network net, activation_f activator)
 void nn_inference(network net)
 {
     size_t i,j,k;
-    float sum;
     for (i = 0;i < LAYERS;i++)
     {
         neuron *line;
@@ -162,21 +162,6 @@ void nn_inference(network net)
         {
             neuron one;
             one = line[j];
-            sum = 0.0f;
-            if (one.inputs)
-            {
-                for (k = 0;k < one.ni;k++)
-                {
-                    sum += one.inputs[k] * one.weights[k];
-                }
-            }
-            else
-            {
-                for (k = 0;k < INPUTS;k++)
-                {
-                    sum += net.inputs[k] * one.weights[k];
-                }
-            }
             one.output = one.activator(one);
             if (!one.outputs)
             {
@@ -184,4 +169,25 @@ void nn_inference(network net)
             }
         }
     }
+}
+
+float nn_sigma_activation(const neuron one)
+{
+    float sum;
+    sum = one.bias;
+    if (one.inputs)
+    {
+        for (k = 0;k < one.ni;k++)
+        {
+            sum += one.inputs[k] * one.weights[k];
+        }
+    }
+    else
+    {
+        for (k = 0;k < INPUTS;k++)
+        {
+            sum += net.inputs[k] * one.weights[k];
+        }
+    }
+    return activation(sum);
 }
