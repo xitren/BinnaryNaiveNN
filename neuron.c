@@ -51,7 +51,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[0]->activator = activator;
         net.hidden[0]->inputs = 0;
-        net.hidden[0]->weights = hidden1_weights;
+        net.hidden[0]->weights = hidden1_weights[i];
 #if (LAYER_II_NEURONS > 0)
         net.hidden[0]->output = hidden2;
 #else
@@ -65,7 +65,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[1]->activator = activator;
         net.hidden[1]->inputs = 0;
-        net.hidden[1]->weights = hidden2_weights;
+        net.hidden[1]->weights = hidden2_weights[i];
 #if (LAYER_III_NEURONS > 0)
         net.hidden[1]->output = hidden3;
 #else
@@ -79,7 +79,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[2]->activator = activator;
         net.hidden[2]->inputs = 0;
-        net.hidden[2]->weights = hidden3_weights;
+        net.hidden[2]->weights = hidden3_weights[i];
 #if (LAYER_IV_NEURONS > 0)
         net.hidden[2]->output = hidden4;
 #else
@@ -93,7 +93,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[3]->activator = activator;
         net.hidden[3]->inputs = 0;
-        net.hidden[3]->weights = hidden4_weights;
+        net.hidden[3]->weights = hidden4_weights[i];
 #if (LAYER_V_NEURONS > 0)
         net.hidden[3]->output = hidden5;
 #else
@@ -107,7 +107,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[4]->activator = activator;
         net.hidden[4]->inputs = 0;
-        net.hidden[4]->weights = hidden5_weights;
+        net.hidden[4]->weights = hidden5_weights[i];
 #if (LAYER_VI_NEURONS > 0)
         net.hidden[4]->output = hidden6;
 #else
@@ -121,7 +121,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[5]->activator = activator;
         net.hidden[5]->inputs = 0;
-        net.hidden[5]->weights = hidden6_weights;
+        net.hidden[5]->weights = hidden6_weights[i];
 #if (LAYER_VII_NEURONS > 0)
         net.hidden[5]->output = hidden7;
 #else
@@ -135,7 +135,7 @@ void nn_initialize(network net, activation_f activator)
     {
         net.hidden[6]->activator = activator;
         net.hidden[6]->inputs = 0;
-        net.hidden[6]->weights = hidden7_weights;
+        net.hidden[6]->weights = hidden7_weights[i];
         net.hidden[6]->output = 0;
     }
 #endif

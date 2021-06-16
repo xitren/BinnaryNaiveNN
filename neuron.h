@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 #define INPUTS 5
-#define LAYERS 7
+#define LAYERS 4
 #if (LAYERS > 0)
     #define LAYER_I_NEURONS 5
 #endif
