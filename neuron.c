@@ -1,11 +1,5 @@
 #include "neuron.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include "utilities.h"
-
 #if (LAYER_I_NEURONS > 0)
     static neuron hidden1[LAYER_I_NEURONS];
     static float hidden1_weights[LAYER_I_NEURONS][INPUTS];
@@ -46,6 +40,29 @@ void nn_initialize(network net, activation_f activator)
     {
         net.outputs[i] = 0;
     }
+    net.hidden_cnt = (size_t*){
+#if (LAYERS > 0)
+        LAYER_I_NEURONS
+#endif
+#if (LAYERS > 1)
+        , LAYER_II_NEURONS
+#endif
+#if (LAYERS > 2)
+        , LAYER_III_NEURONS
+#endif
+#if (LAYERS > 3)
+        , LAYER_IV_NEURONS
+#endif
+#if (LAYERS > 4)
+        , LAYER_V_NEURONS
+#endif
+#if (LAYERS > 5)
+        , LAYER_VI_NEURONS
+#endif
+#if (LAYERS > 6)
+        , LAYER_VII_NEURONS
+#endif
+    };
 #if (LAYER_I_NEURONS > 0)
     net.hidden[0] = hidden1;
     for (i = 0;i < LAYER_I_NEURONS;i++)
@@ -153,26 +170,27 @@ void nn_initialize(network net, activation_f activator)
 
 void nn_inference(network net)
 {
-    size_t i,j,k;
+    size_t i,j;
     for (i = 0;i < LAYERS;i++)
     {
         neuron *line;
-        line = net.hidden[i];
-        for (j = 0;j < hidden_cnt[i];j++)
+        line = (neuron *)net.hidden[i];
+        for (j = 0;j < net.hidden_cnt[i];j++)
         {
             neuron one;
             one = line[j];
-            one.output = one.activator(one);
+            one.output = one.activator(net, one);
             if (!one.outputs)
             {
-                net.outputs[j] = one.outputs;
+                net.outputs[j] = one.output;
             }
         }
     }
 }
 
-float nn_sigma_activation(const neuron one)
+float nn_sigma_activation(const network net, const neuron one)
 {
+    size_t k;
     float sum;
     sum = one.bias;
     if (one.inputs)
