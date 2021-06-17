@@ -5,6 +5,46 @@
 #include <stdlib.h>
 #include <math.h>
 
+// Computes error.
+static float err(const float a, const float b)
+{
+    return 0.5f * (a - b) * (a - b);
+}
+
+// Returns partial derivative of error function.
+static float pderr(const float a, const float b)
+{
+    return a - b;
+}
+
+// Computes total error of target to output.
+static float toterr(const float* const tg, const float* const o, const int size)
+{
+    float sum = 0.0f;
+    for(int i = 0; i < size; i++)
+        sum += err(tg[i], o[i]);
+    return sum;
+}
+
+// Activation function.
+static float act(const float a)
+{
+    return 1.0f / (1.0f + expf(-a));
+}
+
+// Returns partial derivative of activation function.
+static float pdact(const float a)
+{
+    return a * (1.0f - a);
+}
+
+// Returns floating point random from 0.0 - 1.0.
+static float frand()
+{
+    return rand() / (float) RAND_MAX;
+}
+
+
 // Performs back propagation.
 static void bprop(const Tinn t, const float* const in, const float* const tg, float rate)
 {
