@@ -28,6 +28,13 @@
     static neuron hidden7[LAYER_VII_NEURONS];
     static float hidden7_weights[LAYER_VII_NEURONS][LAYER_VI_NEURONS];
 #endif
+    
+static float correct_weight(float weight, const float teach_speed,
+        const float delta, const float value,
+        const activation_f activator);
+// Returns floating point random from 0.0 - 1.0.
+static inline float frand();
+static float nn_neuron_activation(const network net, const neuron one);
 
 void nn_initialize(network net, activation_f activator)
 {
@@ -188,7 +195,56 @@ void nn_inference(network net)
     }
 }
 
-float nn_sigma_activation(const network net, const neuron one)
+void nn_backward(network net, float target[OUTPUTS])
+{
+    size_t i,j,k;
+    nn_inference(net);
+    // Delta propagation
+    for (i = LAYERS - 1;i >= 0;i--)
+    {
+        neuron *line;
+        line = (neuron *)net.hidden[i];
+        for (j = 0;j < net.hidden_cnt[i];j++)
+        {
+            neuron one;
+            one = line[j];
+            if (one.outputs)
+            {
+                one.delta = 0.0f;
+                for (k = 0;k < one.no;k++)
+                {
+                    one.delta += one.outputs[k] * one.outputs[k].weights[j];
+                }
+            }
+            else
+            {
+                one.delta = target[j] - one.output;
+            }
+        }
+    }
+}
+
+// Activation function.
+float activation(const float a)
+{
+    return 1.0f / (1.0f + expf(-a));
+}
+
+static float correct_weight(float weight, const float teach_speed,
+        const float delta, const float value,
+        const activation_f activator)
+{
+    weight += teach_speed * delta  * value;
+    return weight;
+}
+
+// Returns floating point random from 0.0 - 1.0.
+static inline float frand()
+{
+    return rand() / (float) RAND_MAX;
+}
+
+static float nn_neuron_activation(const network net, const neuron one)
 {
     size_t k;
     float sum;

@@ -16,7 +16,6 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "utilities.h"
 
 #define INPUTS 5
 #define LAYERS 4
@@ -66,7 +65,7 @@ extern "C" {
 
 #define WEIGHTS 10
 
-typedef float (*activation_f)(const network, const neuron);
+typedef float (*activation_f)(const float a);
 
 typedef struct _tag_neuron {
     // All the input weights.
@@ -77,6 +76,8 @@ typedef struct _tag_neuron {
     size_t ni;
     // Bias value
     float bias;
+    // Delta value
+    float delta;
     // Activation function.
     activation_f activator;
     // Propagation id.
@@ -102,7 +103,7 @@ typedef struct _tag_network {
 
 void nn_initialize(network net, activation_f activator);
 void nn_inference(network net);
-float nn_sigma_activation(const network net, const neuron one);
+float activation(const float a);
 
 #ifdef __cplusplus
 }
