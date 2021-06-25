@@ -17,8 +17,8 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-#define INPUTS 5
-#define LAYERS 4
+#define INPUTS 2
+#define LAYERS 2
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
@@ -51,27 +51,26 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 5
+    #define LAYER_II_NEURONS 2
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 5
+    #define LAYER_I_NEURONS 2
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif
 #endif
 
-#define WEIGHTS 10
-
 typedef float (*activation_f)(const float a);
+typedef float (*pd_activation_f)(const float a);
 
 typedef struct _tag_neuron {
     // All the input weights.
     float* weights;
     // Input neurons.
-    struct neuron* inputs;
+    void* inputs;
     // Number of inputs.
     size_t ni;
     // Bias value
@@ -80,12 +79,14 @@ typedef struct _tag_neuron {
     float delta;
     // Activation function.
     activation_f activator;
+    // Activation function.
+    pd_activation_f pd_activator;
     // Propagation id.
     int propagator;
     // Output value
     float output;
     // Output neurons.
-    struct neuron* outputs;
+    void* outputs;
     // Number of outputs.
     size_t no;
 } neuron;
@@ -94,16 +95,20 @@ typedef struct _tag_network {
     // All the input data.
     float inputs[INPUTS];
     // Hidden layers.
-    struct neuron* hidden[LAYERS];
+    neuron* hidden[LAYERS];
     // Hidden layers neuron count.
     size_t* hidden_cnt;
     // All the output data.
     float outputs[OUTPUTS];
+    // Teaching speed
+    float teaching_speed;
 } network;
 
-void nn_initialize(network net, activation_f activator);
-void nn_inference(network net);
+void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator);
+void nn_inference(network *net);
+void nn_backward(network *net, float target[OUTPUTS]);
 float activation(const float a);
+float pd_activation(const float a);
 
 #ifdef __cplusplus
 }

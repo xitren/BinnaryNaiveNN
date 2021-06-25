@@ -1,4 +1,4 @@
-BIN = test
+textBIN = test
 
 CFLAGS = -std=c99 -Wall -Wextra -pedantic -Ofast -flto -march=native
 
@@ -14,5 +14,5 @@ all:
 run:
 	./$(BIN)
 
-clean:
-	rm -f $(BIN)
+#clean:
+#	rm -f $(BIN)

@@ -146,17 +146,17 @@ int main()
     srand(time(0));
     // Input and output size is harded coded here as machine learning
     // repositories usually don't include the input and output size in the data itself.
-    const int nips = 256;
-    const int nops = 10;
+    const int nips = 2;
+    const int nops = 2;
     // Hyper Parameters.
     // Learning rate is annealed and thus not constant.
     // It can be fine tuned along with the number of hidden layers.
     // Feel free to modify the anneal rate.
     // The number of iterations can be changed for stronger training.
     float rate = 1.0f;
-    const int nhid = 28;
+    const int nhid = 2;
     const float anneal = 0.99f;
-    const int iterations = 1024;
+    const int iterations = 4;
     // Load the training set.
     const Data data = build("semeion.data", nips, nops);
     // Train, baby, train.
