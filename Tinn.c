@@ -68,7 +68,7 @@ static void bprop(const Tinn t, const float* const in, const float* const tg, fl
             printf("Init weights %f \r\n\r", t.w[i * t.nips + j]);
             t.w[i * t.nips + j] -= rate * sum * pdact(t.h[i]) * in[j];
             printf("Correct weights hidden layer %d, neuron %d: d(%f) %f \r\n\r", 
-                    i, j, sum * pdact(t.h[i]), t.x[i * t.nhid + j]);
+                    i, j, sum * pdact(t.h[i]), t.w[i * t.nhid + j]);
         }
     }
 }
