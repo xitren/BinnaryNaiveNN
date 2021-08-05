@@ -140,7 +140,7 @@ static Data build(const char* path, const int nips, const int nops)
 }
 
 // Learns and predicts hand written digits with 98% accuracy.
-int main()
+int main(void)
 {
     // Tinn does not seed the random number generator.
     srand(time(0));
@@ -156,9 +156,9 @@ int main()
     float rate = 1.0f;
     const int nhid = 2;
     const float anneal = 0.99f;
-    const int iterations = 4;
+    const int iterations = 1000;
     // Load the training set.
-    const Data data = build("semeion.data", nips, nops);
+    const Data data = build("tests/semeion.data", nips, nops);
     // Train, baby, train.
     const Tinn tinn = xtbuild(nips, nhid, nops);
     for(int i = 0; i < iterations; i++)
@@ -176,25 +176,6 @@ int main()
             (double) rate);
         rate *= anneal;
     }
-    // This is how you save the neural network to disk.
-    xtsave(tinn, "saved.tinn");
-    xtfree(tinn);
-    // This is how you load the neural network from disk.
-    const Tinn loaded = xtload("saved.tinn");
-    // Now we do a prediction with the neural network we loaded from disk.
-    // Ideally, we would also load a testing set to make the prediction with,
-    // but for the sake of brevity here we just reuse the training set from earlier.
-    // One data set is picked at random (zero index of input and target arrays is enough
-    // as they were both shuffled earlier).
-    const float* const in = data.in[0];
-    const float* const tg = data.tg[0];
-    const float* const pd = xtpredict(loaded, in);
-    // Prints target.
-    xtprint(tg, data.nops);
-    // Prints prediction.
-    xtprint(pd, data.nops);
-    // All done. Let's clean up.
-    xtfree(loaded);
     dfree(data);
     return 0;
 }

@@ -61,7 +61,7 @@ static float nn_neuron_activation(const network *net, const neuron *one);
 
 void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator)
 {
-    int i, j, k;
+    size_t i, j, k;
     for (i = 0;i < INPUTS;i++)
     {
         net->inputs[i] = 0;

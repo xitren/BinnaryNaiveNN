@@ -57,18 +57,18 @@ static void bprop(const Tinn t, const float* const in, const float* const tg, fl
             const float a = pderr(t.o[j], tg[j]);
             const float b = pdact(t.o[j]);
             sum += a * b * t.x[j * t.nhid + i];
-            printf("Sum %f %f\r\n\r", sum, t.x[j * t.nhid + i]);
+//            printf("Sum %f %f\r\n\r", sum, t.x[j * t.nhid + i]);
             // Correct weights in hidden to output layer.
             t.x[j * t.nhid + i] -= rate * a * b * t.h[i];
-            printf("Correct weights from hidden %d to output layer, neuron %d: d(%f) %f \r\n\r", 
-                    i, j, a * b, t.x[j * t.nhid + i]);
+//            printf("Correct weights from hidden %d to output layer, neuron %d: d(%f) %f \r\n\r", 
+//                    i, j, a * b, t.x[j * t.nhid + i]);
         }
         // Correct weights in input to hidden layer.
         for(int j = 0; j < t.nips; j++) {
-            printf("Init weights %f \r\n\r", t.w[i * t.nips + j]);
+//            printf("Init weights %f \r\n\r", t.w[i * t.nips + j]);
             t.w[i * t.nips + j] -= rate * sum * pdact(t.h[i]) * in[j];
-            printf("Correct weights hidden layer %d, neuron %d: d(%f) %f \r\n\r", 
-                    i, j, sum * pdact(t.h[i]), t.w[i * t.nhid + j]);
+//            printf("Correct weights hidden layer %d, neuron %d: d(%f) %f \r\n\r", 
+//                    i, j, sum * pdact(t.h[i]), t.w[i * t.nhid + j]);
         }
     }
 }
@@ -83,7 +83,7 @@ static void fprop(const Tinn t, const float* const in)
         for(int j = 0; j < t.nips; j++)
             sum += in[j] * t.w[i * t.nips + j];
         t.h[i] = act(sum + t.b[0]);
-        printf("hidden neuron %d: %f \r\n\r", i, t.h[i]);
+//        printf("hidden neuron %d: %f \r\n\r", i, t.h[i]);
     }
     // Calculate output layer neuron values.
     for(int i = 0; i < t.nops; i++)
@@ -92,17 +92,15 @@ static void fprop(const Tinn t, const float* const in)
         for(int j = 0; j < t.nhid; j++)
             sum += t.h[j] * t.x[i * t.nhid + j];
         t.o[i] = act(sum + t.b[1]);
-        printf("Output neuron %d: %f \r\n\r", i, t.o[i]);
+//        printf("Output neuron %d: %f \r\n\r", i, t.o[i]);
     }
 }
 
 // Randomizes tinn weights and biases.
 static void wbrand(const Tinn t)
 {
-//    for(int i = 0; i < t.nw; i++) t.w[i] = frand() - 0.5f;
-//    for(int i = 0; i < t.nb; i++) t.b[i] = frand() - 0.5f;
-    for(int i = 0; i < t.nw; i++) t.w[i] = 0.5f;
-    for(int i = 0; i < t.nb; i++) t.b[i] = 0.5f;
+    for(int i = 0; i < t.nw; i++) t.w[i] = frand() - 0.5f;
+    for(int i = 0; i < t.nb; i++) t.b[i] = frand() - 0.5f;
 }
 
 // Returns an output prediction given an input.
