@@ -1,0 +1,155 @@
+/* 
+ * File:   neuron.h
+ * Author: xitre
+ *
+ * Created on 16 июня 2021 г., 2:10
+ */
+
+#ifndef NEURON_H
+#define NEURON_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define GROUP 32
+    #if (GROUP == 8)
+        #define GROUP_TYPE uint8_t
+    #endif
+    #if (GROUP == 16)
+        #define GROUP_TYPE uint16_t
+    #endif
+    #if (GROUP == 32)
+        #define GROUP_TYPE uint32_t
+    #endif
+    #if (GROUP == 64)
+        #define GROUP_TYPE uint64_t
+    #endif
+#define INPUTS 32
+#if ((INPUTS % GROUP) > 0)
+    #error "Not a power of 2!"
+#endif
+#define LAYERS 2
+#if (LAYERS > 7)
+    #error "More than 7 layers unsupported!"
+#endif
+#if (LAYERS > 6)
+    #define LAYER_VII_NEURONS 32
+    #if ((LAYER_VII_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #define OUTPUTS LAYER_VII_NEURONS
+#endif
+#if (LAYERS > 5)
+    #define LAYER_VI_NEURONS 32
+    #if ((LAYER_VI_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_VI_NEURONS
+    #endif
+#endif
+#if (LAYERS > 4)
+    #define LAYER_V_NEURONS 32
+    #if ((LAYER_V_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_V_NEURONS
+    #endif
+#endif
+#if (LAYERS > 3)
+    #define LAYER_IV_NEURONS 32
+    #if ((LAYER_IV_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_IV_NEURONS
+    #endif
+#endif
+#if (LAYERS > 2)
+    #define LAYER_III_NEURONS 32
+    #if ((LAYER_III_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_III_NEURONS
+    #endif
+#endif
+#if (LAYERS > 1)
+    #define LAYER_II_NEURONS 32
+    #if ((LAYER_II_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_II_NEURONS
+    #endif
+#endif
+#if (LAYERS > 0)
+    #define LAYER_I_NEURONS 32
+    #if ((LAYER_I_NEURONS % GROUP) > 0)
+        #error "Not a power of 2!"
+    #endif
+    #ifndef OUTPUTS
+        #define OUTPUTS LAYER_I_NEURONS
+    #endif
+#endif
+
+typedef float (*activation_f)(const float a);
+typedef float (*pd_activation_f)(const float a);
+
+typedef struct _tag_neuron {
+    // All the input weights.
+    GROUP_TYPE* weights;
+    // Input neurons.
+    void* inputs;
+    // Number of inputs.
+    size_t ni;
+    // Bias value
+    float bias;
+    // Delta value
+    float delta;
+    // Activation function.
+    activation_f activator;
+    // Activation function.
+    pd_activation_f pd_activator;
+    // Propagation id.
+    int propagator;
+    // Output value
+    float output;
+    // Output neurons.
+    void* outputs;
+    // Number of outputs.
+    size_t no;
+} neuron;
+
+typedef struct _tag_network {
+    // All the input data.
+    GROUP_TYPE inputs[INPUTS];
+    // Hidden layers.
+    neuron* hidden[LAYERS];
+    // Hidden layers neuron count.
+    size_t* hidden_cnt;
+    // All the output data.
+    GROUP_TYPE outputs[OUTPUTS];
+    // Teaching speed
+    float teaching_speed;
+} network;
+
+void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator);
+void nn_inference(network *net);
+void nn_backward(network *net, GROUP_TYPE target[OUTPUTS]);
+float activation(const float a);
+float pd_activation(const float a);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* NEURON_H */
+

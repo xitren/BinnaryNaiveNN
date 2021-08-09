@@ -10,6 +10,7 @@ CC = gcc
 
 SRCREF = ref/Tinn.c
 SRC = src/neuron.c
+SRCBNN = src/bnn.c
 
 all:
 	$(CC) -o $(testBIN) $(SRC) $(CFLAGS) $(LDFLAGS)
@@ -23,6 +24,12 @@ test_ref_work:
 test_src_work:
 	rm -f $(testBIN)
 	$(CC) -o $(testBIN) tests/1_work_src.c $(SRCREF) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	
+test_bnn_work:
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/1_work_bnn.c $(SRCBNN) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 
