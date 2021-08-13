@@ -1,4 +1,4 @@
-#include "Tinn.h"
+#include "neuron.h"
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -87,35 +87,6 @@ static void parse(const Data data, char* line, const int row)
     }
 }
 
-// Frees a data object from the heap.
-static void dfree(const Data d)
-{
-    for(int row = 0; row < d.rows; row++)
-    {
-        free(d.in[row]);
-        free(d.tg[row]);
-    }
-    free(d.in);
-    free(d.tg);
-}
-
-// Randomly shuffles a data object.
-static void shuffle(const Data d)
-{
-    for(int a = 0; a < d.rows; a++)
-    {
-        const int b = rand() % d.rows;
-        float* ot = d.tg[a];
-        float* it = d.in[a];
-        // Swap output.
-        d.tg[a] = d.tg[b];
-        d.tg[b] = ot;
-        // Swap input.
-        d.in[a] = d.in[b];
-        d.in[b] = it;
-    }
-}
-
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const int nips, const int nops)
 {
@@ -144,38 +115,21 @@ int main(void)
 {
     // Tinn does not seed the random number generator.
     srand(time(0));
-    // Input and output size is harded coded here as machine learning
-    // repositories usually don't include the input and output size in the data itself.
-    const int nips = 20;
+    
+    const int nips = 256;
     const int nops = 10;
-    // Hyper Parameters.
-    // Learning rate is annealed and thus not constant.
-    // It can be fine tuned along with the number of hidden layers.
-    // Feel free to modify the anneal rate.
-    // The number of iterations can be changed for stronger training.
-    float rate = 1.0f;
-    const int nhid = 2;
-    const float anneal = 0.99f;
-    const int iterations = 1000;
+    float target[10];
+    
     // Load the training set.
     const Data data = build("tests/semeion.data", nips, nops);
+    
     // Train, baby, train.
-    const Tinn tinn = xtbuild(nips, nhid, nops);
-    for(int i = 0; i < iterations; i++)
-    {
-        shuffle(data);
-        float error = 0.0f;
-        for(int j = 0; j < data.rows; j++)
-        {
-            const float* const in = data.in[j];
-            const float* const tg = data.tg[j];
-            error += xttrain(tinn, in, tg, rate);
-        }
-        printf("error %.12f :: learning rate %f\n",
-            (double) error / data.rows,
-            (double) rate);
-        rate *= anneal;
+    network net;
+    neuron one;
+    nn_initialize(&net,&activation,&pd_activation);
+    for (int i = 0; i < 256; i++){
+        net.inputs[i] = data.in[0][i];
     }
-    dfree(data);
+    nn_backward(&net,target);
     return 0;
 }

@@ -17,8 +17,8 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-#define INPUTS 2
-#define LAYERS 2
+#define INPUTS 256
+#define LAYERS 4
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
@@ -39,25 +39,25 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS 5
+    #define LAYER_IV_NEURONS 10
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
 #endif
 #if (LAYERS > 2)
-    #define LAYER_III_NEURONS 5
+    #define LAYER_III_NEURONS 16
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_III_NEURONS
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 2
+    #define LAYER_II_NEURONS 64
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 2
+    #define LAYER_I_NEURONS 256
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif

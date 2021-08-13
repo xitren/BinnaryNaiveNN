@@ -52,9 +52,6 @@
 #endif
     };
     
-static float correct_weight(float weight, const float teach_speed,
-        const float delta, const float value,
-        const activation_f activator);
 // Returns floating point random from 0.0 - 1.0.
 static inline float frand();
 static float nn_neuron_activation(const network *net, const neuron *one);
@@ -66,7 +63,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->inputs[i] = 0;
     }
-    for (i = 0;i < INPUTS;i++)
+    for (i = 0;i < OUTPUTS;i++)
     {
         net->outputs[i] = 0;
     }
@@ -77,6 +74,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[0][i].ni = INPUTS;
         net->hidden[0][i].activator = activator;
+        net->hidden[0][i].pd_activator = pd_activator;
         net->hidden[0][i].inputs = 0;
         net->hidden[0][i].weights = hidden1_weights[i];
 #if (LAYER_II_NEURONS > 0)
@@ -94,6 +92,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[1][i].ni = LAYER_I_NEURONS;
         net->hidden[1][i].activator = activator;
+        net->hidden[1][i].pd_activator = pd_activator;
         net->hidden[1][i].inputs = (neuron *)hidden1;
         net->hidden[1][i].weights = hidden2_weights[i];
 #if (LAYER_III_NEURONS > 0)
@@ -111,6 +110,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[2][i].ni = LAYER_II_NEURONS;
         net->hidden[2][i].activator = activator;
+        net->hidden[2][i].pd_activator = pd_activator;
         net->hidden[2][i].inputs = (neuron *)hidden2;
         net->hidden[2][i].weights = hidden3_weights[i];
 #if (LAYER_IV_NEURONS > 0)
@@ -128,6 +128,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[3][i].ni = LAYER_III_NEURONS;
         net->hidden[3][i].activator = activator;
+        net->hidden[3][i].pd_activator = pd_activator;
         net->hidden[3][i].inputs = hidden3;
         net->hidden[3][i].weights = hidden4_weights[i];
 #if (LAYER_V_NEURONS > 0)
@@ -145,6 +146,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[4][i].ni = LAYER_IV_NEURONS;
         net->hidden[4][i].activator = activator;
+        net->hidden[4][i].pd_activator = pd_activator;
         net->hidden[4][i].inputs = hidden4;
         net->hidden[4][i].weights = hidden5_weights[i];
 #if (LAYER_VI_NEURONS > 0)
@@ -162,6 +164,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[5][i].ni = LAYER_V_NEURONS;
         net->hidden[5][i].activator = activator;
+        net->hidden[5][i].pd_activator = pd_activator;
         net->hidden[5][i].inputs = hidden5;
         net->hidden[5][i].weights = hidden6_weights[i];
 #if (LAYER_VII_NEURONS > 0)
@@ -179,6 +182,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
     {
         net->hidden[6][i].ni = LAYER_VI_NEURONS;
         net->hidden[6][i].activator = activator;
+        net->hidden[6][i].pd_activator = pd_activator;
         net->hidden[6][i].inputs = hidden6;
         net->hidden[6][i].weights = hidden7_weights[i];
         net->hidden[6][i].outputs = 0;
@@ -215,7 +219,7 @@ void nn_inference(network *net)
             {
                 net->outputs[j] = one->output;
             }
-            printf("Layer %d, neuron %d: out(%f) \r\n\r", i, j, one->output);
+            printf("Layer %ld, neuron %ld: out(%f) \r\n\r", i, j, one->output);
         }
     }
 }
@@ -272,7 +276,7 @@ void nn_backward(network *net, float target[OUTPUTS])
             {
                 one->delta = pd * (one->output - target[j]);
             }
-            printf("Layer %d, neuron %d: d(%f) \r\n\r", i - 1, j, one->delta);
+            printf("Layer %ld, neuron %ld: d(%f) \r\n\r", i - 1, j, one->delta);
         }
     }
     // Weights propagation
@@ -290,7 +294,7 @@ void nn_backward(network *net, float target[OUTPUTS])
                 {
                     one->weights[k] -= net->teaching_speed * one->delta
                             * ((neuron *)(one->inputs))[k].output;
-                    printf("Layer %d, neuron %d, link %d: w(%f) \r\n\r", 
+                    printf("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
                             i, j, k, one->weights[k]);
                 }
             }
@@ -300,7 +304,7 @@ void nn_backward(network *net, float target[OUTPUTS])
                 {
                     one->weights[k] -= net->teaching_speed * one->delta
                             * net->inputs[k];
-                    printf("Layer %d, neuron %d, link %d: w(%f) \r\n\r", 
+                    printf("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
                             i, j, k, one->weights[k]);
                 }
             }
@@ -318,14 +322,6 @@ float activation(const float a)
 float pd_activation(const float a)
 {
     return a * (1.0f - a);
-}
-
-static float correct_weight(float weight, const float teach_speed,
-        const float delta, const float value,
-        const activation_f activator)
-{
-    weight += teach_speed * delta  * value;
-    return weight;
 }
 
 // Returns floating point random from 0.0 - 1.0.

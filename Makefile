@@ -23,7 +23,7 @@ test_ref_work:
 	
 test_src_work:
 	rm -f $(testBIN)
-	$(CC) -o $(testBIN) tests/1_work_src.c $(SRCREF) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	$(CC) -o $(testBIN) tests/1_work_src.c $(SRC) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 	
