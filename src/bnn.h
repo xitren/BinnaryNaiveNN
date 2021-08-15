@@ -17,135 +17,128 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-#define GROUP 32
-    #if (GROUP == 8)
-        #define GROUP_TYPE uint8_t
-    #endif
-    #if (GROUP == 16)
-        #define GROUP_TYPE uint16_t
-    #endif
-    #if (GROUP == 32)
-        #define GROUP_TYPE uint32_t
-    #endif
-    #if (GROUP == 64)
-        #define GROUP_TYPE uint64_t
-    #endif
-#define INPUTS 32
-#if ((INPUTS % GROUP) > 0)
-    #error "Not a power of 2!"
+#define LEARNER
+#define GROUP_TYPE uint32_t
+#define BATCH sizeof(GROUP_TYPE)
+    
+#define INPUTS 256 / BATCH
+#if ((INPUTS % BATCH) > 0)
+    #error "Not a full butch!"
 #endif
 #define LAYERS 2
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
 #if (LAYERS > 6)
-    #define LAYER_VII_NEURONS 32
-    #if ((LAYER_VII_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_VII_NEURONS 32 / BATCH
+    #if ((LAYER_VII_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #define OUTPUTS LAYER_VII_NEURONS
 #endif
 #if (LAYERS > 5)
-    #define LAYER_VI_NEURONS 32
-    #if ((LAYER_VI_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_VI_NEURONS 32 / BATCH
+    #if ((LAYER_VI_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_VI_NEURONS
     #endif
 #endif
 #if (LAYERS > 4)
-    #define LAYER_V_NEURONS 32
-    #if ((LAYER_V_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_V_NEURONS 32 / BATCH
+    #if ((LAYER_V_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_V_NEURONS
     #endif
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS 32
-    #if ((LAYER_IV_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_IV_NEURONS 32 / BATCH
+    #if ((LAYER_IV_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
 #endif
 #if (LAYERS > 2)
-    #define LAYER_III_NEURONS 32
-    #if ((LAYER_III_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_III_NEURONS 32 / BATCH
+    #if ((LAYER_III_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_III_NEURONS
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 32
-    #if ((LAYER_II_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_II_NEURONS 32 / BATCH
+    #if ((LAYER_II_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 32
-    #if ((LAYER_I_NEURONS % GROUP) > 0)
-        #error "Not a power of 2!"
+    #define LAYER_I_NEURONS 64 / BATCH
+    #if ((LAYER_I_NEURONS % BATCH) > 0)
+        #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif
 #endif
 
-typedef float (*activation_f)(const float a);
-typedef float (*pd_activation_f)(const float a);
-
-typedef struct _tag_neuron {
+typedef struct _tag_neuron_batch {
     // All the input weights.
     GROUP_TYPE* weights;
+#ifdef LEARNER
+    double* weights_full;
+#endif
     // Input neurons.
     void* inputs;
     // Number of inputs.
     size_t ni;
     // Bias value
-    float bias;
+    GROUP_TYPE bias;
+#ifdef LEARNER
+    double bias_full[BATCH];
+#endif
     // Delta value
-    float delta;
-    // Activation function.
-    activation_f activator;
-    // Activation function.
-    pd_activation_f pd_activator;
+    float delta[BATCH];
     // Propagation id.
     int propagator;
     // Output value
-    float output;
+    GROUP_TYPE output;
+#ifdef LEARNER
+    double output_full[BATCH];
+#endif
     // Output neurons.
     void* outputs;
     // Number of outputs.
     size_t no;
-} neuron;
+} neuron_batch;
 
 typedef struct _tag_network {
     // All the input data.
-    GROUP_TYPE inputs[INPUTS];
+    GROUP_TYPE inputs[INPUTS / BATCH];
     // Hidden layers.
-    neuron* hidden[LAYERS];
+    neuron_batch* hidden[LAYERS];
     // Hidden layers neuron count.
     size_t* hidden_cnt;
     // All the output data.
-    GROUP_TYPE outputs[OUTPUTS];
+    GROUP_TYPE outputs[OUTPUTS / BATCH];
     // Teaching speed
     float teaching_speed;
 } network;
 
-void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator);
+void nn_initialize(network *net);
 void nn_inference(network *net);
-void nn_backward(network *net, GROUP_TYPE target[OUTPUTS]);
-float activation(const float a);
-float pd_activation(const float a);
+#ifdef LEARNER
+void nn_backward(network *net, GROUP_TYPE target[OUTPUTS / BATCH]);
+#endif
 
 #ifdef __cplusplus
 }

@@ -195,7 +195,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         {
             for (k = 0;k < net->hidden[i][j].ni;k++)
             {
-                net->hidden[i][j].weights[k] = 0.5;
+                net->hidden[i][j].weights[k] = frand();
             }
             net->hidden[i][j].bias = 0.5;
         }
@@ -324,8 +324,8 @@ float pd_activation(const float a)
     return a * (1.0f - a);
 }
 
-// Returns floating point random from 0.0 - 1.0.
+// Returns floating point random from -1.0 - 1.0.
 static inline float frand()
 {
-    return rand() / (float) RAND_MAX;
+    return (rand() / (float) (RAND_MAX / 2)) - 1.0;
 }
