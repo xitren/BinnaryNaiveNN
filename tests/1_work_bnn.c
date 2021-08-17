@@ -1,4 +1,4 @@
-#include "Tinn.h"
+#include "bnn.h"
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -144,38 +144,20 @@ int main(void)
 {
     // Tinn does not seed the random number generator.
     srand(time(0));
-    // Input and output size is harded coded here as machine learning
-    // repositories usually don't include the input and output size in the data itself.
-    const int nips = 20;
-    const int nops = 10;
-    // Hyper Parameters.
-    // Learning rate is annealed and thus not constant.
-    // It can be fine tuned along with the number of hidden layers.
-    // Feel free to modify the anneal rate.
-    // The number of iterations can be changed for stronger training.
-    float rate = 1.0f;
-    const int nhid = 2;
-    const float anneal = 0.99f;
-    const int iterations = 1000;
+    
+    const int nips = 256;
+    const int nops = 32;
+    group_type target[INPUTS / BATCH];
+    
     // Load the training set.
     const Data data = build("tests/semeion.data", nips, nops);
+    
     // Train, baby, train.
-    const Tinn tinn = xtbuild(nips, nhid, nops);
-    for(int i = 0; i < iterations; i++)
-    {
-        shuffle(data);
-        float error = 0.0f;
-        for(int j = 0; j < data.rows; j++)
-        {
-            const float* const in = data.in[j];
-            const float* const tg = data.tg[j];
-            error += xttrain(tinn, in, tg, rate);
-        }
-        printf("error %.12f :: learning rate %f\n",
-            (double) error / data.rows,
-            (double) rate);
-        rate *= anneal;
+    network net;
+    nn_initialize(&net);
+    for (int i = 0; i < (INPUTS / BATCH); i++){
+        net.inputs[i] = floats_to_bits(data.in[0] + i * BATCH);
     }
-    dfree(data);
+    nn_backward(&net,target);
     return 0;
 }
