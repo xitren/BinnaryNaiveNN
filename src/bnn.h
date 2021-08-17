@@ -107,12 +107,13 @@ typedef struct _tag_neuron_batch {
     double bias_full[BATCH];
 #endif
     // Delta value
-    float delta[BATCH];
+    double delta[BATCH];
     // Propagation id.
     int propagator;
     // Output value
     GROUP_TYPE output;
 #ifdef LEARNER
+    double output_a_full[BATCH];
     double output_full[BATCH];
 #endif
     // Output neurons.
@@ -131,7 +132,7 @@ typedef struct _tag_network {
     // All the output data.
     GROUP_TYPE outputs[OUTPUTS / BATCH];
     // Teaching speed
-    float teaching_speed;
+    double teaching_speed;
 } network;
 
 void nn_initialize(network *net);

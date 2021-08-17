@@ -4,6 +4,7 @@
 #define GET_BIT(num, n) ((num >> n) & 1)
 #define PTR_CAST(ptr) ((neuron_batch *)(ptr))
 #define PTR_UNCAST(ptr) ((void *)(ptr))
+#define POW2(val) (val * val)
 
 #if (LAYER_I_NEURONS > 0)
     static neuron_batch hidden1[LAYER_I_NEURONS / BATCH];
@@ -79,7 +80,7 @@
     };
 
 static inline float frand();
-static float nn_neuron_batch_activation_full(const network *net, const neuron_batch *one)
+static void nn_neuron_batch_activation_full(const network *net, const neuron_batch *one);
 
 void nn_initialize(network *net)
 {
@@ -249,6 +250,7 @@ void nn_initialize(network *net)
     net->teaching_speed = 1;
 }
 
+#ifdef LEARNER
 static void nn_inference_learning(network *net)
 {
     size_t i,j;
@@ -270,10 +272,10 @@ static void nn_inference_learning(network *net)
     }
 }
 
-static float nn_neuron_batch_activation_full(const network *net, const neuron_batch *one)
+static double nn_neuron_batch_activation_full(const network *net, const neuron_batch *one)
 {
     size_t i,k,j;
-    float sum, w_tanh;
+    double sum, w_tanh;
     for (i = 0;i < BATCH;i++)
     {
         sum = tanh(one->bias_full[i]);
@@ -299,39 +301,49 @@ static float nn_neuron_batch_activation_full(const network *net, const neuron_ba
                 }
             }
         }
+        one->output_a_full[i] = sum;
+        one->output_full[i] = tanh(sum);
     }
-    return tanh(sum);
 }
 
-void nn_backward(network *net, float target[OUTPUTS])
+void nn_backward(network *net, GROUP_TYPE target[OUTPUTS / BATCH])
 {
-    size_t i,j,k;
-    float pd;
-    nn_inference(net);
+    size_t i,j,k,b,b2;
+    double sum,bit;
+    nn_inference_learning(net);
     // Delta propagation
     for (i = LAYERS;i > 0;i--)
     {
-        neuron *line;
+        neuron_batch *line;
         line = net->hidden[i - 1];
         for (j = 0;j < net->hidden_cnt[i - 1];j++)
         {
-            neuron *one;
+            neuron_batch *one;
             one = line + j;
-            pd = pd_activation(one->output);
             if (one->outputs)
             {
-                one->delta = 0.0f;
-                for (k = 0;k < one->no;k++)
+                for (b = 0;b < BATCH;b++)
                 {
-                    neuron *gg = ((neuron *)(one->outputs)) + k;
-                    one->delta += gg->delta * gg->weights[j];
-                    printf("Sum %f %f\r\n\r", one->delta, gg->weights[j]);
+                    one->delta[b] = 0.0;
+                    for (k = 0;k < one->no;k++)
+                    {
+                        neuron_batch *gg = ((neuron_batch *)(one->outputs)) + k;
+                        for (b2 = 0;b2 < BATCH;b2++)
+                        {
+                            one->delta[b] += tanh(gg->weights_full[j * BATCH + b]) * gg->delta[b2];
+                        }
+                    }
+                    one->delta[b] *= (1 - POW2(tanh(one->output_a_full[b])));
                 }
-                one->delta = pd * one->delta;
             }
             else
             {
-                one->delta = pd * (one->output - target[j]);
+                for (b = 0;b < BATCH;b++)
+                {
+                    bit = GET_BIT(target, j*BATCH + b);
+                    one->delta[b] = (one->output_full[b] - bit);
+                    one->delta[b] *= (1 - POW2(tanh(one->output_a_full[b])));
+                }
             }
             printf("Layer %d, neuron %d: d(%f) \r\n\r", i - 1, j, one->delta);
         }
@@ -368,6 +380,7 @@ void nn_backward(network *net, float target[OUTPUTS])
         }
     }
 }
+#endif
 
 // Activation function.
 float activation(const float a)
