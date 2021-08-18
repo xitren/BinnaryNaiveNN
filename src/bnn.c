@@ -292,7 +292,7 @@ static void nn_neuron_batch_activation_full(const network *net, neuron_batch *on
         }
         else
         {
-            for (k = 0;k < INPUTS;k++)
+            for (k = 0;k < (INPUTS / BATCH);k++)
             {
                 for (j = 0;j < BATCH;j++)
                 {
