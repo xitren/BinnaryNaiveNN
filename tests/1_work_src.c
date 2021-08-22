@@ -76,37 +76,59 @@ static Data ndata(const int nips, const int nops, const int rows)
 // Gets one row of inputs and outputs from a string.
 static void parse(const Data data, char* line, const int row)
 {
-    const int cols = data.nips + data.nops;
+    const int cols = data.nips;
     for(int col = 0; col < cols; col++)
     {
         const float val = atof(strtok(col == 0 ? line : NULL, " "));
-        if(col < data.nips)
-            data.in[row][col] = val;
-        else
-            data.tg[row][col - data.nips] = val;
+        data.in[row][col] = val;
+    }
+}
+
+// Gets one row of inputs and outputs from a string.
+static void parse_targ(const Data data, char* line, const int row)
+{
+    const int cols = data.nops;
+    for(int col = 0; col < cols; col++)
+    {
+        const float val = atof(strtok(col == 0 ? line : NULL, " "));
+        data.tg[row][col] = val;
     }
 }
 
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
-static Data build(const char* path, const int nips, const int nops)
+static Data build(const char* path, const char* path_targ, const int nips, const int nops)
 {
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
         printf("Could not open %s\n", path);
-        printf("Get it from the machine learning database: ");
-        printf("wget http://archive.ics.uci.edu/ml/machine-learning-databases/semeion/semeion.data\n");
+        exit(1);
+    }
+    FILE* file_targ = fopen(path_targ, "r");
+    if(file_targ == NULL)
+    {
+        printf("Could not open %s\n", path_targ);
         exit(1);
     }
     const int rows = lns(file);
+    const int rows_targ = lns(file_targ);
+    if(rows != rows_targ)
+    {
+        printf("Files has different lines numbers\n");
+        exit(1);
+    }
     Data data = ndata(nips, nops, rows);
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
         parse(data, line, row);
         free(line);
+        line = readln(file_targ);
+        parse_targ(data, line, row);
+        free(line);
     }
     fclose(file);
+    fclose(file_targ);
     return data;
 }
 
@@ -116,20 +138,29 @@ int main(void)
     // Tinn does not seed the random number generator.
     srand(time(0));
     
-    const int nips = 256;
-    const int nops = 10;
-    float target[10];
+    const int nips = 700;
+    const int nops = 3;
+    float target[3];
     
     // Load the training set.
-    const Data data = build("tests/semeion.data", nips, nops);
+    const Data data = build("tests/input_datap.txt", "tests/target_datap.txt", nips, nops);
+    printf("Files readed\n");
     
     // Train, baby, train.
     network net;
-    neuron one;
     nn_initialize(&net,&activation,&pd_activation);
-    for (int i = 0; i < 256; i++){
-        net.inputs[i] = data.in[0][i];
+    nn_save(&net, "net2.txt");
+    for (int it = 0; it < 10; it++){
+        for (int row = 0; row < data.rows; row++){
+            for (int i = 0; i < nips; i++){
+                net.inputs[i] = data.in[row][i];
+            }
+            for (int i = 0; i < 3; i++){
+                target[i] = data.tg[row][i];
+            }
+            nn_backward(&net,target);
+        }
     }
-    nn_backward(&net,target);
+    nn_save(&net, "net.txt");
     return 0;
 }

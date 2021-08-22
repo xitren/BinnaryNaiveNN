@@ -17,7 +17,7 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-#define INPUTS 256
+#define INPUTS 700
 #define LAYERS 4
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
@@ -39,7 +39,7 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS 10
+    #define LAYER_IV_NEURONS 3
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
@@ -107,6 +107,8 @@ typedef struct _tag_network {
 void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator);
 void nn_inference(network *net);
 void nn_backward(network *net, float target[OUTPUTS]);
+void nn_save(network *net, const char* path);
+void nn_load(network *net, const char* path);
 float activation(const float a);
 float pd_activation(const float a);
 

@@ -224,6 +224,55 @@ void nn_inference(network *net)
     }
 }
 
+void nn_save(network *net, const char* path)
+{
+    size_t i,j,k;
+    FILE* const file = fopen(path, "w");
+    for (i = 0;i < LAYERS;i++)
+    {
+        fprintf(file, "===========\n");
+        neuron *line;
+        line = (neuron *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron *one;
+            one = line + j;
+            fprintf(file, "%f\n", one->bias);
+            fprintf(file, "%ld\n", one->ni);
+            for (k = 0;k < one->ni;k++)
+            {
+                fprintf(file, "%f\t", one->weights[k]);
+            }
+            fprintf(file, "\n");
+        }
+    }
+    fclose(file);
+}
+
+void nn_load(network *net, const char* path)
+{
+    size_t i,j,k;
+    FILE* const file = fopen(path, "r");
+    for (i = 0;i < LAYERS;i++)
+    {
+        fscanf(file, "===========\n");
+        neuron *line;
+        line = (neuron *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron *one;
+            one = line + j;
+            fscanf(file, "%f\n", &(one->bias));
+            fscanf(file, "%ld\n", &(one->ni));
+            for (k = 0;k < one->ni;k++)
+            {
+                fscanf(file, "%f\t", &(one->weights[k]));
+            }
+            fscanf(file, "\n");
+        }
+    }
+}
+
 static float nn_neuron_activation(const network *net, const neuron *one)
 {
     size_t k;
