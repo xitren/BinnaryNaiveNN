@@ -20,7 +20,9 @@ extern "C" {
 #define LEARNER
 typedef uint32_t group_type;
 #define BATCH 32
-#define DEBUG_PRINT( format, ... ) printf( format, ## __VA_ARGS__  )
+#define DEBUG_PRINT( format, ... ) { size_glob = \
+snprintf( buf_glob, sizeof(buf_glob), format, ## __VA_ARGS__  ); \
+write(1, buf_glob, size_glob); }
 #define GET_BIT(num, n) ((num >> n) & 1)
 #define SET_BIT(num, n) (num |= (1U << n))
 #define CLR_BIT(num, n) (num &= ~(1U << n))
@@ -138,6 +140,9 @@ typedef struct _tag_network {
     // Teaching speed
     double teaching_speed;
 } network;
+
+extern char log_buf_glob[128];
+extern size_t log_size_glob;    
 
 void nn_initialize(network *net);
 void nn_inference(network *net);

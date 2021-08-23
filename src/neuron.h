@@ -17,8 +17,13 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
+//#define DEBUG_PRINT( format, ... ) { size_glob = \
+//snprintf( buf_glob, sizeof(buf_glob), format, ## __VA_ARGS__  ); \
+//write(1, buf_glob, size_glob); }
+#define DEBUG_PRINT( format, ... ) 
+#define PRINT( format, ... ) 
 #define INPUTS 700
-#define LAYERS 4
+#define LAYERS 3
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
@@ -45,23 +50,26 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 2)
-    #define LAYER_III_NEURONS 16
+    #define LAYER_III_NEURONS 3
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_III_NEURONS
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 64
+    #define LAYER_II_NEURONS 16
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 256
+    #define LAYER_I_NEURONS 64
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif
 #endif
+
+extern char log_buf_glob[128];
+extern size_t log_size_glob;    
 
 typedef float (*activation_f)(const float a);
 typedef float (*pd_activation_f)(const float a);

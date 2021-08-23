@@ -5,6 +5,8 @@
 #define PTR_UNCAST(ptr) ((void *)(ptr))
 #define POW2(val) (val * val)
 
+char log_buf_glob[128];
+size_t log_size_glob;    
 #if (LAYER_I_NEURONS > 0)
     static neuron_batch hidden1[LAYER_I_NEURONS / BATCH];
     static group_type hidden1_weights[LAYER_I_NEURONS / BATCH][INPUTS];
