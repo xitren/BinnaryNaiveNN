@@ -20,6 +20,8 @@ typedef struct
 }
 Data;
 
+#define PRINT_CUSTOM(str) write(1,str, sizeof(str));
+
 // Returns the number of lines in a file.
 static int lns(FILE* const file)
 {
@@ -98,26 +100,27 @@ static void parse_targ(const Data data, char* line, const int row)
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const char* path_targ, const int nips, const int nops)
 {
+    PRINT_CUSTOM("Opening data file\n");
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
+        PRINT_CUSTOM("Error\n");
         printf("Could not open %s\n", path);
         exit(1);
     }
+    PRINT_CUSTOM("Opening target file\n");
     FILE* file_targ = fopen(path_targ, "r");
     if(file_targ == NULL)
     {
+        PRINT_CUSTOM("Error\n");
         printf("Could not open %s\n", path_targ);
         exit(1);
     }
-    const int rows = lns(file);
-    const int rows_targ = lns(file_targ);
-    if(rows != rows_targ)
-    {
-        printf("Files has different lines numbers\n");
-        exit(1);
-    }
+    PRINT_CUSTOM("Countings rows\n");
+    const int rows = 170650;
+    PRINT_CUSTOM("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
+    PRINT_CUSTOM("Started data parsing\n");
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
@@ -126,7 +129,10 @@ static Data build(const char* path, const char* path_targ, const int nips, const
         line = readln(file_targ);
         parse_targ(data, line, row);
         free(line);
+        if (!(row % 10000))
+            PRINT_CUSTOM(".");
     }
+    PRINT_CUSTOM("\n");
     fclose(file);
     fclose(file_targ);
     return data;
@@ -143,9 +149,9 @@ int main(void)
     float target[3];
     
     // Load the training set.
-    printf("Read started\n");
+    PRINT_CUSTOM("Read started\n");
     const Data data = build("tests/input_datap.txt", "tests/target_datap.txt", nips, nops);
-    printf("Files readed\n");
+    PRINT_CUSTOM("Files readed\n");
 //    
 //    // Train, baby, train.
 //    network net;
