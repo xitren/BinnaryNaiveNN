@@ -43,7 +43,7 @@ static char* readln(FILE* const file)
 {
     int ch = EOF;
     int reads = 0;
-    int size = 128;
+    int size = 12800;
     char* line = (char*) malloc((size) * sizeof(char));
     while((ch = getc(file)) != '\n' && ch != EOF)
     {
@@ -143,24 +143,25 @@ int main(void)
     float target[3];
     
     // Load the training set.
+    printf("Read started\n");
     const Data data = build("tests/input_datap.txt", "tests/target_datap.txt", nips, nops);
     printf("Files readed\n");
-    
-    // Train, baby, train.
-    network net;
-    nn_initialize(&net,&activation,&pd_activation);
-    nn_save(&net, "net2.txt");
-    for (int it = 0; it < 10; it++){
-        for (int row = 0; row < data.rows; row++){
-            for (int i = 0; i < nips; i++){
-                net.inputs[i] = data.in[row][i];
-            }
-            for (int i = 0; i < 3; i++){
-                target[i] = data.tg[row][i];
-            }
-            nn_backward(&net,target);
-        }
-    }
-    nn_save(&net, "net.txt");
+//    
+//    // Train, baby, train.
+//    network net;
+//    nn_initialize(&net,&activation,&pd_activation);
+//    nn_save(&net, "net2.txt");
+//    for (int it = 0; it < 10; it++){
+//        for (int row = 0; row < data.rows; row++){
+//            for (int i = 0; i < nips; i++){
+//                net.inputs[i] = data.in[row][i];
+//            }
+//            for (int i = 0; i < 3; i++){
+//                target[i] = data.tg[row][i];
+//            }
+//            nn_backward(&net,target);
+//        }
+//    }
+//    nn_save(&net, "net.txt");
     return 0;
 }
