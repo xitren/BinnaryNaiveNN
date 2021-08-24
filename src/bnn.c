@@ -313,15 +313,22 @@ inline static void backward_batch_delta(neuron_batch *one, size_t j)
     size_t k,b,bk;
     for (b = 0;b < BATCH;b++)
     {
+        DEBUG_PRINT("Batch neuron %zd start\r\n\r", b);
         one->delta[b] = 0.0;
-        for (k = 0;k < one->no;k++)
+        for (k = 0;k < (one->no / BATCH);k++)
         {
+            DEBUG_PRINT("1\n");
             neuron_batch *gg = ((neuron_batch *)(one->outputs)) + k;
+            DEBUG_PRINT("2\n");
+            const float weight_f = gg->weights_full[j * BATCH + b];
+            DEBUG_PRINT("3\n");
             for (bk = 0;bk < BATCH;bk++)
             {
-                one->delta[b] += tanh(gg->weights_full[j * BATCH + b]) * gg->delta[bk];
+                one->delta[b] += tanh(weight_f) * gg->delta[bk];
             }
+            DEBUG_PRINT("4\n");
         }
+        DEBUG_PRINT("ff %f\n", one->output_a_full[b]);
         one->delta[b] *= (1 - POW2(tanh(one->output_a_full[b])));
         DEBUG_PRINT("Batch neuron %zd: d(%f) \r\n\r", b, one->delta[b]);
     }
@@ -334,6 +341,7 @@ inline static void backward_batch_delta_last(neuron_batch *one, size_t j,
     double bit;
     for (b = 0;b < BATCH;b++)
     {
+        DEBUG_PRINT("Batch neuron %zd start last\r\n\r", b);
         bit = GET_BIT(target[j], b);
         one->delta[b] = (one->output_full[b] - bit);
         one->delta[b] *= (1 - POW2(tanh(one->output_a_full[b])));
@@ -351,10 +359,11 @@ inline static void backward_batch_weight(neuron_batch *one, double n)
         {
             for (bk = 0;bk < BATCH;bk++)
             {
+                DEBUG_PRINT("backward neuron %zd start\r\n\r", b);
                 sum = n * one->delta[b] * PTR_CAST(one->inputs)[k].output_full[bk];
                 one->weights_full[k * BATCH + bk] -= 
                         sum * (1 - POW2(tanh(one->weights_full[k * BATCH + bk])));
-                printf("Batch neuron %zd, link %zd: w(%f) \r\n\r", 
+                DEBUG_PRINT("Batch neuron %zd, link %zd: w(%f) \r\n\r", 
                         b, k * BATCH + bk, one->weights_full[k * BATCH + bk]);
             }
         }
@@ -370,9 +379,10 @@ inline static void backward_batch_weight_first(network *net, neuron_batch *one, 
         {
             for (bk = 0;bk < BATCH;bk++)
             {
+                DEBUG_PRINT("backward neuron first %zd start\r\n\r", b);
                 one->weights_full[k * BATCH + bk] -= n * one->delta[b]
                         * GET_BIT(net->inputs[k], bk);
-                printf("Batch neuron %zd, link %zd: w(%f) \r\n\r", 
+                DEBUG_PRINT("Batch neuron %zd, link %zd: w(%f) \r\n\r", 
                         b, k * BATCH + bk, one->weights_full[k * BATCH + bk]);
             }
         }

@@ -43,7 +43,7 @@ static char* readln(FILE* const file)
 {
     int ch = EOF;
     int reads = 0;
-    int size = 128;
+    int size = 12800;
     char* line = (char*) malloc((size) * sizeof(char));
     while((ch = getc(file)) != '\n' && ch != EOF)
     {
@@ -119,24 +119,56 @@ static void shuffle(const Data d)
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const int nips, const int nops)
 {
+    PRINT("Opening data file\n");
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
-        printf("Could not open %s\n", path);
-        printf("Get it from the machine learning database: ");
-        printf("wget http://archive.ics.uci.edu/ml/machine-learning-databases/semeion/semeion.data\n");
+        PRINT("Could not open %s\n", path);
+        PRINT("Get it from the machine learning database: ");
+        PRINT("wget http://archive.ics.uci.edu/ml/machine-learning-databases/semeion/semeion.data\n");
         exit(1);
     }
+    PRINT("Countings rows\n");
     const int rows = lns(file);
+    PRINT("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
+    PRINT("Started data parsing\n");
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
         parse(data, line, row);
         free(line);
+        if (!(row % 1000))
+            PRINT("Readed %d of %d\n", row, rows);
     }
+    PRINT("\nend\n");
     fclose(file);
     return data;
+}
+
+// Computes error.
+static float err(const group_type a, const group_type b)
+{
+    float sum = 0.0f;
+    for(size_t k = 0; k < sizeof(group_type); k++)
+    {
+        if (GET_BIT(a, k) != GET_BIT(b, k))
+        {
+            sum += 1.;
+        }
+    }
+    return sum;
+}
+
+// Computes total error of target to output.
+static float toterr(const group_type* const tg, const group_type* const o, const int size)
+{
+    float sum = 0.0f;
+    for(int i = 0; i < size; i++)
+    {
+        sum += err(tg[i], o[i]);
+    }
+    return sum;
 }
 
 // Learns and predicts hand written digits with 98% accuracy.
@@ -147,17 +179,49 @@ int main(void)
     
     const int nips = 256;
     const int nops = 32;
-    group_type target[INPUTS / BATCH];
+    group_type target[OUTPUTS / BATCH];
     
     // Load the training set.
-    const Data data = build("tests/semeion.data", nips, nops);
+    PRINT("Read started\n");
+    const Data data = build("tests/semeion.data", nips, 10);
+    PRINT("Files readed\n");
     
     // Train, baby, train.
     network net;
+    PRINT("Initialization started\n");
     nn_initialize(&net);
-    for (int i = 0; i < (INPUTS / BATCH); i++){
-        net.inputs[i] = floats_to_bits(data.in[0] + i * BATCH);
+    net.teaching_speed = 10;
+    float error = 0.9 * data.rows;
+    PRINT("Learning started\n");
+    for (int it = 0; (it < 10000)
+            && (net.teaching_speed > 0.001) 
+            && ((error / data.rows) > 0.01); it++)
+    {
+        shuffle(data);
+        error = 0.;
+        for (int row = 0; row < data.rows; row++)
+        {
+            for (int i = 0;i < (INPUTS / BATCH);i++)
+            {
+                net.inputs[i] = floats_to_bits(data.in[row] + i * BATCH);
+            }
+            target[0] = 0;
+            for (int i = 0;i < 10;i++)
+            {
+                if (data.tg[row][i] > 0.5)
+                    SET_BIT(target[0], i);
+            }
+            DEBUG_PRINT("Target: %08X\n", target[0]);
+            nn_backward(&net, target);
+            DEBUG_PRINT("Outputs: %08X\n", net.outputs[0]);
+            error += toterr(target, net.outputs, OUTPUTS / BATCH);
+        }
+        net.teaching_speed *= 0.99f;
+        PRINT("%d) error %.12f :: learning rate %f\n",
+            it,
+            (double) error / data.rows,
+            (double) net.teaching_speed);
     }
-    nn_backward(&net,target);
+    dfree(data);
     return 0;
 }

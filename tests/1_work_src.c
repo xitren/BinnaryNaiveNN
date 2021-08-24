@@ -199,15 +199,22 @@ int main(void)
     PRINT("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
     net.teaching_speed = 10;
+    float error = 0.9 * data.rows;
     PRINT("Learning started\n");
-    for (int it = 0; (it < 100000) && (net.teaching_speed > 0.001); it++){
+    for (int it = 0; (it < 10000) 
+            && (net.teaching_speed > 0.001) 
+            && ((error / data.rows) > 0.01); it++)
+    {
         shuffle(data);
-        float error = 0.;
-        for (int row = 0; row < data.rows; row++){
-            for (int i = 0; i < nips; i++){
+        error = 0.;
+        for (int row = 0; row < data.rows; row++)
+        {
+            for (int i = 0; i < nips; i++)
+            {
                 net.inputs[i] = data.in[row][i];
             }
-            for (int i = 0; i < OUTPUTS; i++){
+            for (int i = 0; i < OUTPUTS; i++)
+            {
                 target[i] = data.tg[row][i];
             }
             DEBUG_PRINT("Target: %f %f %f\n", target[0], target[1], target[2]);
@@ -215,12 +222,13 @@ int main(void)
             DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.999f;
-        PRINT("error %.12f :: learning rate %f\n",
+        net.teaching_speed *= 0.99f;
+        PRINT("%d) error %.12f :: learning rate %f\n",
+            it,
             (double) error / data.rows,
             (double) net.teaching_speed);
+        nn_save(&net, "net_usial_pressure.txt");
     }
-    nn_save(&net, "net_usial_pressure.txt");
     dfree(data);
     return 0;
 }
