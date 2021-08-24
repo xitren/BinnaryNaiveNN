@@ -21,9 +21,15 @@ test_ref_work:
 	./$(testBIN)
 	rm -f $(testBIN)
 	
-test_src_work:
+test_src_learn:
 	rm -f $(testBIN)
 	$(CC) -o $(testBIN) tests/1_work_src.c $(SRC) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	
+test_src_work:
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/2_work_src.c $(SRC) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 	

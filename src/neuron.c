@@ -203,7 +203,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
             net->hidden[i][j].bias = 0.5;
         }
     }
-    net->teaching_speed = 1;
+    net->teaching_speed = 1.;
 }
 
 void nn_inference(network *net)

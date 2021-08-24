@@ -21,7 +21,10 @@ extern "C" {
 //snprintf( buf_glob, sizeof(buf_glob), format, ## __VA_ARGS__  ); \
 //write(1, buf_glob, size_glob); }
 #define DEBUG_PRINT( format, ... ) 
-#define PRINT( format, ... ) 
+#define PRINT( format, ... ) { log_size_glob = \
+snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
+write(1, log_buf_glob, log_size_glob); }
+#define POW2(val) (val * val)
 #define INPUTS 700
 #define LAYERS 3
 #if (LAYERS > 7)

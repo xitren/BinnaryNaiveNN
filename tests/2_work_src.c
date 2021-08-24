@@ -1,7 +1,6 @@
 #include "neuron.h"
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -85,17 +84,6 @@ static void parse(const Data data, char* line, const int row)
     }
 }
 
-// Gets one row of inputs and outputs from a string.
-static void parse_targ(const Data data, char* line, const int row)
-{
-    const int cols = data.nops;
-    for(int col = 0; col < cols; col++)
-    {
-        const float val = atof(strtok(col == 0 ? line : NULL, "\t"));
-        data.tg[row][col] = val;
-    }
-}
-
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const char* path_targ, const int nips, const int nops)
 {
@@ -104,13 +92,6 @@ static Data build(const char* path, const char* path_targ, const int nips, const
     if(file == NULL)
     {
         PRINT("Could not open %s\n", path);
-        exit(1);
-    }
-    PRINT("Opening target file\n");
-    FILE* file_targ = fopen(path_targ, "r");
-    if(file_targ == NULL)
-    {
-        PRINT("Could not open %s\n", path_targ);
         exit(1);
     }
     PRINT("Countings rows\n");
@@ -123,9 +104,6 @@ static Data build(const char* path, const char* path_targ, const int nips, const
         char* line = readln(file);
         parse(data, line, row);
         free(line);
-        line = readln(file_targ);
-        parse_targ(data, line, row);
-        free(line);
         if (!(row % 100))
             PRINT(".");
     }
@@ -135,48 +113,19 @@ static Data build(const char* path, const char* path_targ, const int nips, const
     return data;
 }
 
-// Computes error.
-static float err(const float a, const float b)
+static void result_save(Data *data, const char* path)
 {
-    return 0.5f * (a - b) * (a - b);
-}
-
-// Computes total error of target to output.
-static float toterr(const float* const tg, const float* const o, const int size)
-{
-    float sum = 0.0f;
-    for(int i = 0; i < size; i++)
-        sum += err(tg[i], o[i]);
-    return sum;
-}
-
-// Randomly shuffles a data object.
-static void shuffle(const Data d)
-{
-    for(int a = 0; a < d.rows; a++)
+    size_t i,j;
+    FILE* const file = fopen(path, "w");
+    for (i = 0;i < data->rows;i++)
     {
-        const int b = rand() % d.rows;
-        float* ot = d.tg[a];
-        float* it = d.in[a];
-        // Swap output.
-        d.tg[a] = d.tg[b];
-        d.tg[b] = ot;
-        // Swap input.
-        d.in[a] = d.in[b];
-        d.in[b] = it;
+        for (j = 0;j < data->nips;j++)
+        {
+            fprintf(file, "%f\t", one->bias);
+        }
+        fprintf(file, "\n");
     }
-}
-
-// Frees a data object from the heap.
-static void dfree(const Data d)
-{
-    for(int row = 0; row < d.rows; row++)
-    {
-        free(d.in[row]);
-        free(d.tg[row]);
-    }
-    free(d.in);
-    free(d.tg);
+    fclose(file);
 }
 
 // Learns and predicts hand written digits with 98% accuracy.
@@ -196,32 +145,17 @@ int main(void)
     
     // Train, baby, train.
     network net;
-    PRINT("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
-    PRINT("Learning started\n");
-    for (int it = 0; it < 1000; it++){
-        shuffle(data);
-        float error = 0.;
-        for (int row = 0; row < data.rows; row++){
-            for (int i = 0; i < nips; i++){
-                net.inputs[i] = data.in[row][i];
-            }
-            for (int i = 0; i < OUTPUTS; i++){
-                target[i] = data.tg[row][i];
-            }
-            DEBUG_PRINT("Target: %f %f %f\n", target[0], target[1], target[2]);
-            for (int it2 = 0; it2 < 10; it2++){
-                nn_backward(&net,target);
-            }
-            DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
-            error += toterr(target, net.outputs, OUTPUTS);
+    nn_load(&net, "net.txt");
+    for (int row = 0; row < data.rows; row++){
+        for (int i = 0; i < nips; i++){
+            net.inputs[i] = data.in[row][i];
         }
-        net.teaching_speed *= 0.99f;
-        PRINT("error %.12f :: learning rate %f\n",
-            (double) error / data.rows,
-            (double) net.teaching_speed);
+        nn_inference(&net);
+        for (int i = 0; i < nops; i++){
+            data.tg[row][i] = net.outputs[i];
+        }
     }
-    nn_save(&net, "net.txt");
-    dfree(data);
+    result_save(&data, "results.txt");
     return 0;
 }
