@@ -4,7 +4,7 @@ CFLAGS = -std=c99 -Wall -Wextra -pedantic -Ofast -flto -march=native
 
 INCLUDES = -Iref -Isrc -I.
 
-LDFLAGS = -lm
+LDFLAGS = -lm -Os
 
 CC = gcc
 

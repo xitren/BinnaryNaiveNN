@@ -85,7 +85,7 @@ static void parse(const Data data, char* line, const int row)
 }
 
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
-static Data build(const char* path, const char* path_targ, const int nips, const int nops)
+static Data build(const char* path, const int nips, const int nops)
 {
     PRINT("Opening data file\n");
     FILE* file = fopen(path, "r");
@@ -95,7 +95,7 @@ static Data build(const char* path, const char* path_targ, const int nips, const
         exit(1);
     }
     PRINT("Countings rows\n");
-    const int rows = 170650;
+    const int rows = 78400;
     PRINT("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
     PRINT("Started data parsing\n");
@@ -109,7 +109,6 @@ static Data build(const char* path, const char* path_targ, const int nips, const
     }
     PRINT("\nend\n");
     fclose(file);
-    fclose(file_targ);
     return data;
 }
 
@@ -134,28 +133,42 @@ int main(void)
     // Tinn does not seed the random number generator.
     srand(time(0));
     
-    const int nips = 700;
-    const int nops = 3;
+    const int nips = INPUTS;
+    const int nops = OUTPUTS;
     float target[3];
     
     // Load the training set.
     PRINT("Read started\n");
-    const Data data = build("tests/input_datap.txt", "tests/target_datap.txt", nips, nops);
+    const Data data = build("tests/prep_data.txt", 2, nops);
     PRINT("Files readed\n");
     
     // Train, baby, train.
     network net;
     nn_initialize(&net,&activation,&pd_activation);
     nn_load(&net, "net.txt");
-    for (int row = 0; row < data.rows; row++){
-        for (int i = 0; i < nips; i++){
-            net.inputs[i] = data.in[row][i];
+    for (int k = 0; k < (data.rows - nips); k++)
+    {
+        for (int i = 0; i < 700; i++)
+        {
+            net.inputs[i] = data.in[k + i][0];
+        }
+        for (int i = 0; i < 700; i++)
+        {
+            net.inputs[i + 700] = data.in[k + i][1];
         }
         nn_inference(&net);
-        for (int i = 0; i < nops; i++){
-            data.tg[row][i] = net.outputs[i];
+        for (int i = 0; i < nops; i++)
+        {
+            data.tg[k][i] = net.outputs[i];
         }
     }
-    result_save(&data, "results.txt");
+    for (int k = (data.rows - nips); k < data.rows; k++)
+    {
+        for (int i = 0; i < nops; i++)
+        {
+            data.tg[k][i] = 0;
+        }
+    }
+    result_save(&data, "results.csv");
     return 0;
 }

@@ -25,7 +25,7 @@ extern "C" {
 snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
 write(1, log_buf_glob, log_size_glob); }
 #define POW2(val) (val * val)
-#define INPUTS 700
+#define INPUTS 1400
 #define LAYERS 3
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"

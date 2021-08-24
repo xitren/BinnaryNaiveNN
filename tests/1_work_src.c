@@ -126,8 +126,8 @@ static Data build(const char* path, const char* path_targ, const int nips, const
         line = readln(file_targ);
         parse_targ(data, line, row);
         free(line);
-        if (!(row % 100))
-            PRINT(".");
+        if (!(row % 1000))
+            PRINT("Readed %d of %d\n", row, rows);
     }
     PRINT("\nend\n");
     fclose(file);
@@ -185,7 +185,7 @@ int main(void)
     // Tinn does not seed the random number generator.
     srand(time(0));
     
-    const int nips = 700;
+    const int nips = 1400;
     const int nops = 3;
     float target[3];
     
@@ -198,8 +198,9 @@ int main(void)
     network net;
     PRINT("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
+    net.teaching_speed = 10;
     PRINT("Learning started\n");
-    for (int it = 0; it < 1000; it++){
+    for (int it = 0; (it < 100000) && (net.teaching_speed > 0.001); it++){
         shuffle(data);
         float error = 0.;
         for (int row = 0; row < data.rows; row++){
@@ -210,18 +211,16 @@ int main(void)
                 target[i] = data.tg[row][i];
             }
             DEBUG_PRINT("Target: %f %f %f\n", target[0], target[1], target[2]);
-            for (int it2 = 0; it2 < 10; it2++){
-                nn_backward(&net,target);
-            }
+            nn_backward(&net,target);
             DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.99f;
+        net.teaching_speed *= 0.999f;
         PRINT("error %.12f :: learning rate %f\n",
             (double) error / data.rows,
             (double) net.teaching_speed);
     }
-    nn_save(&net, "net.txt");
+    nn_save(&net, "net_usial_pressure.txt");
     dfree(data);
     return 0;
 }
