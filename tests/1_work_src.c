@@ -198,7 +198,7 @@ int main(void)
     network net;
     PRINT("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
-    net.teaching_speed = 10;
+    net.teaching_speed = 4;
     float error = 0.9 * data.rows;
     PRINT("Learning started\n");
     for (int it = 0; (it < 10000) 
@@ -222,7 +222,7 @@ int main(void)
             DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.99f;
+        net.teaching_speed *= 0.999f;
         PRINT("%d) error %.12f :: learning rate %f\n",
             it,
             (double) error / data.rows,
