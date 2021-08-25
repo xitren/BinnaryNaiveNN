@@ -112,15 +112,15 @@ static Data build(const char* path, const int nips, const int nops)
     return data;
 }
 
-static void result_save(Data *data, const char* path)
+static void result_save(const Data *data, const char* path)
 {
-    size_t i,j;
+    int i,j;
     FILE* const file = fopen(path, "w");
     for (i = 0;i < data->rows;i++)
     {
-        for (j = 0;j < data->nips;j++)
+        for (j = 0;j < data->nops;j++)
         {
-            fprintf(file, "%f\t", one->bias);
+            fprintf(file, "%f\t", data->tg[i][j]);
         }
         fprintf(file, "\n");
     }
@@ -144,8 +144,11 @@ int main(void)
     
     // Train, baby, train.
     network net;
+    PRINT("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
+    PRINT("Load started\n");
     nn_load(&net, "net.txt");
+    PRINT("Inference started\n");
     for (int k = 0; k < (data.rows - nips); k++)
     {
         for (int i = 0; i < 700; i++)
@@ -157,6 +160,7 @@ int main(void)
             net.inputs[i + 700] = data.in[k + i][1];
         }
         nn_inference(&net);
+        DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
         for (int i = 0; i < nops; i++)
         {
             data.tg[k][i] = net.outputs[i];
