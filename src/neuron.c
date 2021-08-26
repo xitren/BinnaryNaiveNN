@@ -258,7 +258,6 @@ void nn_load(network *net, const char* path)
     FILE* const file = fopen(path, "r");
     for (i = 0;i < LAYERS;i++)
     {
-        PRINT("Load layer %zu\n", i);
         fscanf(file, "===========\n");
         neuron *line;
         line = (neuron *)net->hidden[i];
@@ -268,13 +267,11 @@ void nn_load(network *net, const char* path)
             one = line + j;
             fscanf(file, "%f\n", &(one->bias));
             fscanf(file, "%zu\n", &(one->ni));
-            PRINT("Load neuron %zu\n", j);
             for (k = 0;k < one->ni;k++)
             {
                 fscanf(file, "%f\t", &(one->weights[k]));
             }
             fscanf(file, "\n");
-            PRINT("End load neuron\n");
         }
     }
 }
