@@ -151,13 +151,13 @@ int main(void)
     PRINT("Inference started\n");
     for (int k = 0; k < (data.rows - nips); k++)
     {
-        for (int i = 0; i < 700; i++)
+        for (int i = 0; i < 350; i++)
         {
-            net.inputs[i] = data.in[k + i][0];
+            net.inputs[i] = data.in[k + i*2][0];
         }
-        for (int i = 0; i < 700; i++)
+        for (int i = 0; i < 350; i++)
         {
-            net.inputs[i + 700] = data.in[k + i][1];
+            net.inputs[i + 350] = data.in[k + i*2][1];
         }
         nn_inference(&net);
         DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);

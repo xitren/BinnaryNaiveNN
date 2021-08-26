@@ -209,9 +209,9 @@ int main(void)
         error = 0.;
         for (int row = 0; row < data.rows; row++)
         {
-            for (int i = 0; i < nips; i++)
+            for (int i = 0; i < (nips/2); i++)
             {
-                net.inputs[i] = data.in[row][i];
+                net.inputs[i] = data.in[row][i*2];
             }
             for (int i = 0; i < OUTPUTS; i++)
             {
@@ -227,7 +227,7 @@ int main(void)
             it,
             (double) error / data.rows,
             (double) net.teaching_speed);
-        nn_save(&net, "net_usial_pressure.txt");
+        nn_save(&net, "net_usial_pressure2.txt");
     }
     dfree(data);
     return 0;
