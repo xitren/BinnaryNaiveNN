@@ -222,7 +222,7 @@ int main(void)
             DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.999f;
+        net.teaching_speed *= 0.994f;
         PRINT("%d) error %.12f :: learning rate %f\n",
             it,
             (double) error / data.rows,
