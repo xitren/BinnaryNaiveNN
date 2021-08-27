@@ -8,9 +8,9 @@ LDFLAGS = -lm -Os
 
 CC = gcc
 
-SRCREF = ref/Tinn.c
-SRC = src/neuron.c
-SRCBNN = src/bnn.c
+SRCREF = ref/Tinn.c src/logger.c
+SRC = src/neuron.c src/logger.c
+SRCBNN = src/bnn.c src/logger.c
 
 all:
 	$(CC) -o $(testBIN) $(SRC) $(CFLAGS) $(LDFLAGS)

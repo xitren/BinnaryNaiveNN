@@ -1,4 +1,5 @@
 #include "neuron.h"
+#include "logger.h"
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -87,27 +88,27 @@ static void parse(const Data data, char* line, const int row)
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const int nips, const int nops)
 {
-    PRINT("Opening data file\n");
+    DESCRIBE_LOG("Opening data file\n");
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
-        PRINT("Could not open %s\n", path);
+        ERROR_LOG("Could not open %s\n", path);
         exit(1);
     }
-    PRINT("Countings rows\n");
+    DESCRIBE_LOG("Countings rows\n");
     const int rows = 5878400;
-    PRINT("Memory allocated\n");
+    DESCRIBE_LOG("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
-    PRINT("Started data parsing\n");
+    DESCRIBE_LOG("Started data parsing\n");
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
         parse(data, line, row);
         free(line);
-        if (!(row % 100))
-            PRINT(".");
+        if (!(row % 1000))
+            TRACE_LOG("Readed %d of %d\n", row, rows);
     }
-    PRINT("\nend\n");
+    DESCRIBE_LOG("\nend\n");
     fclose(file);
     return data;
 }
@@ -138,17 +139,17 @@ int main(void)
     float target[3];
     
     // Load the training set.
-    PRINT("Read started\n");
+    DESCRIBE_LOG("Read started\n");
     const Data data = build("tests/prep_data.txt", 2, nops);
-    PRINT("Files readed\n");
+    DESCRIBE_LOG("Files readed\n");
 
     // Train, baby, train.
     network net;
-    PRINT("Initialization started\n");
+    DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
-    PRINT("Load started\n");
+    DESCRIBE_LOG("Load started\n");
     nn_load(&net, "net_usial_pressure.txt");
-    PRINT("Inference started\n");
+    DESCRIBE_LOG("Inference started\n");
     for (int k = 0; k < (data.rows - nips); k++)
     {
         for (int i = 0; i < 700; i++)
@@ -160,7 +161,7 @@ int main(void)
             net.inputs[i + 700] = data.in[k + i][1];
         }
         nn_inference(&net);
-        DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
+        TRACE_LOG("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
         for (int i = 0; i < nops; i++)
         {
             data.tg[k][i] = net.outputs[i];

@@ -26,22 +26,22 @@ extern "C" {
     snprintf( log_buf_glob, sizeof(log_buf_glob), "%s"format, tag, ## __VA_ARGS__  ); \
     logger_print_in_log(lvl);}
 #if DEBUG_LVL >= 0
-    #define DESCRIBE_LOG(format, ...) PRINT_PREPARE(0, "", format, ...)
+    #define DESCRIBE_LOG(format, ...) PRINT_PREPARE(0, "", format, ## __VA_ARGS__)
 #else
     #define DESCRIBE_LOG(format, ...)
 #endif
 #if DEBUG_LVL >= 1
-    #define ERROR_LOG(format, ...) PRINT_PREPARE(1, ERROR, format, ...)
+    #define ERROR_LOG(format, ...) PRINT_PREPARE(1, ERROR, format, ## __VA_ARGS__)
 #else
     #define ERROR_LOG(format, ...)
 #endif
 #if DEBUG_LVL >= 2
-    #define WARNING_LOG(format, ...) PRINT_PREPARE(2, WARNING, format, ...)
+    #define WARNING_LOG(format, ...) PRINT_PREPARE(2, WARNING, format, ## __VA_ARGS__)
 #else
     #define WARNING_LOG(format, ...)
 #endif
 #if DEBUG_LVL >= 3
-    #define TRACE_LOG(format, ...) PRINT_PREPARE(3, TRACE, format, ...)
+    #define TRACE_LOG(format, ...) PRINT_PREPARE(3, TRACE, format, ## __VA_ARGS__)
 #else
     #define TRACE_LOG(format, ...)
 #endif

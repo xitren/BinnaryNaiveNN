@@ -1,4 +1,5 @@
 #include "neuron.h"
+#include "logger.h"
 
 #if (LAYER_I_NEURONS > 0)
     static neuron hidden1[LAYER_I_NEURONS];
@@ -210,19 +211,17 @@ void nn_inference(network *net)
     {
         neuron *line;
         line = (neuron *)net->hidden[i];
-        DEBUG_PRINT("Layer %zd\n", i);
+        TRACE_LOG("Layer %zd\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
             neuron *one;
             one = line + j;
-            DEBUG_PRINT("1\n");
             one->output = nn_neuron_activation(net, one);
-            DEBUG_PRINT("Output\n");
             if (!one->outputs)
             {
                 net->outputs[j] = one->output;
             }
-            DEBUG_PRINT("Layer %zd, neuron %zd: out(%f) \r\n\r", i, j, one->output);
+            TRACE_LOG("Layer %zd, neuron %zd: out(%f) \r\n\r", i, j, one->output);
         }
     }
 }
@@ -231,6 +230,10 @@ void nn_save(network *net, const char* path)
 {
     size_t i,j,k;
     FILE* const file = fopen(path, "w");
+    if (!file)
+    {
+        ERROR_LOG("Can't open log file!");
+    }
     for (i = 0;i < LAYERS;i++)
     {
         fprintf(file, "===========\n");
@@ -256,6 +259,10 @@ void nn_load(network *net, const char* path)
 {
     size_t i,j,k;
     FILE* const file = fopen(path, "r");
+    if (!file)
+    {
+        ERROR_LOG("Can't open log file!");
+    }
     for (i = 0;i < LAYERS;i++)
     {
         fscanf(file, "===========\n");
@@ -320,7 +327,7 @@ void nn_backward(network *net, float target[OUTPUTS])
                 {
                     neuron *gg = ((neuron *)(one->outputs)) + k;
                     one->delta += gg->delta * gg->weights[j];
-                    DEBUG_PRINT("Sum %f %f\r\n\r", one->delta, gg->weights[j]);
+                    TRACE_LOG("Sum %f %f\r\n\r", one->delta, gg->weights[j]);
                 }
                 one->delta = pd * one->delta;
             }
@@ -328,7 +335,7 @@ void nn_backward(network *net, float target[OUTPUTS])
             {
                 one->delta = pd * (one->output - target[j]);
             }
-            DEBUG_PRINT("Layer %ld, neuron %ld: d(%f) \r\n\r", i - 1, j, one->delta);
+            TRACE_LOG("Layer %ld, neuron %ld: d(%f) \r\n\r", i - 1, j, one->delta);
         }
     }
     // Weights propagation
@@ -346,7 +353,7 @@ void nn_backward(network *net, float target[OUTPUTS])
                 {
                     one->weights[k] -= net->teaching_speed * one->delta
                             * ((neuron *)(one->inputs))[k].output;
-                    DEBUG_PRINT("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
+                    TRACE_LOG("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
                             i, j, k, one->weights[k]);
                 }
             }
@@ -356,7 +363,7 @@ void nn_backward(network *net, float target[OUTPUTS])
                 {
                     one->weights[k] -= net->teaching_speed * one->delta
                             * net->inputs[k];
-                    DEBUG_PRINT("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
+                    TRACE_LOG("Layer %ld, neuron %ld, link %ld: w(%f) \r\n\r", 
                             i, j, k, one->weights[k]);
                 }
             }

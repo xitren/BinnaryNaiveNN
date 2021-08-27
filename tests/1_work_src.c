@@ -1,4 +1,5 @@
 #include "neuron.h"
+#include "logger.h"
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
@@ -99,25 +100,25 @@ static void parse_targ(const Data data, char* line, const int row)
 // Parses file from path getting all inputs and outputs for the neural network. Returns data object.
 static Data build(const char* path, const char* path_targ, const int nips, const int nops)
 {
-    PRINT("Opening data file\n");
+    DESCRIBE_LOG("Opening data file\n");
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
-        PRINT("Could not open %s\n", path);
+        ERROR_LOG("Could not open %s\n", path);
         exit(1);
     }
-    PRINT("Opening target file\n");
+    DESCRIBE_LOG("Opening target file\n");
     FILE* file_targ = fopen(path_targ, "r");
     if(file_targ == NULL)
     {
-        PRINT("Could not open %s\n", path_targ);
+        ERROR_LOG("Could not open %s\n", path_targ);
         exit(1);
     }
-    PRINT("Countings rows\n");
+    DESCRIBE_LOG("Countings rows\n");
     const int rows = 170650;
-    PRINT("Memory allocated\n");
+    DESCRIBE_LOG("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
-    PRINT("Started data parsing\n");
+    DESCRIBE_LOG("Started data parsing\n");
     for(int row = 0; row < rows; row++)
     {
         char* line = readln(file);
@@ -127,9 +128,9 @@ static Data build(const char* path, const char* path_targ, const int nips, const
         parse_targ(data, line, row);
         free(line);
         if (!(row % 1000))
-            PRINT("Readed %d of %d\n", row, rows);
+            TRACE_LOG("Readed %d of %d\n", row, rows);
     }
-    PRINT("\nend\n");
+    DESCRIBE_LOG("\nend\n");
     fclose(file);
     fclose(file_targ);
     return data;
@@ -190,17 +191,17 @@ int main(void)
     float target[3];
     
     // Load the training set.
-    PRINT("Read started\n");
+    DESCRIBE_LOG("Read started\n");
     const Data data = build("tests/input_datap.txt", "tests/target_datap.txt", nips, nops);
-    PRINT("Files readed\n");
+    DESCRIBE_LOG("Files readed\n");
     
     // Train, baby, train.
     network net;
-    PRINT("Initialization started\n");
+    DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
     net.teaching_speed = 4;
     float error = 0.9 * data.rows;
-    PRINT("Learning started\n");
+    DESCRIBE_LOG("Learning started\n");
     for (int it = 0; (it < 10000) 
             && (net.teaching_speed > 0.001) 
             && ((error / data.rows) > 0.01); it++)
@@ -217,13 +218,13 @@ int main(void)
             {
                 target[i] = data.tg[row][i];
             }
-            DEBUG_PRINT("Target: %f %f %f\n", target[0], target[1], target[2]);
+            TRACE_LOG("Target: %f %f %f\n", target[0], target[1], target[2]);
             nn_backward(&net,target);
-            DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
+            TRACE_LOG("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
         net.teaching_speed *= 0.994f;
-        PRINT("%d) error %.12f :: learning rate %f\n",
+        DESCRIBE_LOG("%d) error %.12f :: learning rate %f\n",
             it,
             (double) error / data.rows,
             (double) net.teaching_speed);
