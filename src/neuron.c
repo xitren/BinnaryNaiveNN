@@ -1,8 +1,5 @@
 #include "neuron.h"
 
-char log_buf_glob[128];
-size_t log_size_glob;    
-
 #if (LAYER_I_NEURONS > 0)
     static neuron hidden1[LAYER_I_NEURONS];
     static float hidden1_weights[LAYER_I_NEURONS][INPUTS];
@@ -213,16 +210,19 @@ void nn_inference(network *net)
     {
         neuron *line;
         line = (neuron *)net->hidden[i];
+        DEBUG_PRINT("Layer %zd\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
             neuron *one;
             one = line + j;
+            DEBUG_PRINT("1\n");
             one->output = nn_neuron_activation(net, one);
+            DEBUG_PRINT("Output\n");
             if (!one->outputs)
             {
                 net->outputs[j] = one->output;
             }
-            DEBUG_PRINT("Layer %ld, neuron %ld: out(%f) \r\n\r", i, j, one->output);
+            DEBUG_PRINT("Layer %zd, neuron %zd: out(%f) \r\n\r", i, j, one->output);
         }
     }
 }

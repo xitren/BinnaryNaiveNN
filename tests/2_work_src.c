@@ -95,7 +95,7 @@ static Data build(const char* path, const int nips, const int nops)
         exit(1);
     }
     PRINT("Countings rows\n");
-    const int rows = 78400;
+    const int rows = 5878400;
     PRINT("Memory allocated\n");
     Data data = ndata(nips, nops, rows);
     PRINT("Started data parsing\n");
@@ -141,7 +141,7 @@ int main(void)
     PRINT("Read started\n");
     const Data data = build("tests/prep_data.txt", 2, nops);
     PRINT("Files readed\n");
-    
+
     // Train, baby, train.
     network net;
     PRINT("Initialization started\n");
@@ -151,13 +151,13 @@ int main(void)
     PRINT("Inference started\n");
     for (int k = 0; k < (data.rows - nips); k++)
     {
-        for (int i = 0; i < 350; i++)
+        for (int i = 0; i < 700; i++)
         {
-            net.inputs[i] = data.in[k + i*2][0];
+            net.inputs[i] = data.in[k + i][0];
         }
-        for (int i = 0; i < 350; i++)
+        for (int i = 0; i < 700; i++)
         {
-            net.inputs[i + 350] = data.in[k + i*2][1];
+            net.inputs[i + 700] = data.in[k + i][1];
         }
         nn_inference(&net);
         DEBUG_PRINT("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
