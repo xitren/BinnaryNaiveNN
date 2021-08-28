@@ -15,37 +15,19 @@
 
 #define RAND_TRIGGER(prob) ((int)(RAND_MAX * prob))
 
-static float err[POP_MAX];
-static float pi[POP_MAX];
-static float ki[POP_MAX];
-static float copy[POP_MAX];
-static size_t copy_fl[POP_MAX];
-static size_t i_max;
-
-static float sumf[5];
-static float midf[5];
-static float minf[5];
-
 static group_type_gen genes_random[CROMOSOME_SIZE / BATCH];
 
 static inline group_type_gen* genrand();
-static void print_selection_table();
-
-static void print_selection_table()
-{
-    size_t i;
-    for (i = 0;i < i_max;i++)
-    {
-        TRACE_LOG("%1.3f %1.3f %1.3f %1.3f %02zu \n",
-                err[i], pi[i], ki[i], copy[i], copy_fl[i]);
-    }
-    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f %02zu \n",
-            sumf[0], sumf[1], sumf[2], sumf[3], (size_t)sumf[4]);
-    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f %02zu \n",
-            midf[0], midf[1], midf[2], midf[3], (size_t)midf[4]);
-    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f %02zu \n",
-            minf[0], minf[1], minf[2], minf[3], (size_t)minf[4]);
-}
+static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
+        float ki[POP_MAX], float copy[POP_MAX],
+        float sumf[4], float midf_pi, float midf_ki);
+static void calculate_roulette(population_ranger* pop);
+static void pop_crossover_uno_binary(_tag_chromosome_binary* child, 
+        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB);
+static void pop_crossover_multi_binary(_tag_chromosome_binary* child, 
+        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB);
+static void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob);
+static chromosome_binary* select_from_roulette(population_ranger* pop);
 
 void initiate_population_ranger(population_ranger* pop, error_f func, 
         size_t pop_initial, float mutation_prob, float crossover_prob)
@@ -65,7 +47,41 @@ void initiate_population_ranger(population_ranger* pop, error_f func,
     pop->crossover_prob = crossover_prob;
 }
 
-void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob)
+void pop_selection(population_ranger* pop)
+{
+    size_t i;
+    static chromosome_binary pop_live[POP_MAX];
+    memset(pop_live, 0, sizeof(pop_live));
+    for (i = 0;i < POP_MAX;i++)
+    {
+        const chromosome_binary* parentA = select_from_roulette();
+        const chromosome_binary* parentB = select_from_roulette();
+        if (!parentA || !parentB)
+            return;
+        pop_crossover_multi_binary(pop_live + i, parentA, parentB);
+        pop_mutation_binary(pop_live + i, pop->mutation_prob);
+    }
+    memcpy(pop->pop_live, pop_live, sizeof(pop_live));
+}
+
+static chromosome_binary* select_from_roulette(population_ranger* pop)
+{
+    size_t j;
+    const int rn = rand();
+    for (j = 0;j < POP_MAX;j++)
+    {
+        if (rn < RAND_TRIGGER(pop->copy_roulette[j]))
+            break;
+    }
+    if (j == POP_MAX)
+    {
+        ERROR_LOG("Roulette critical error!");
+        return 0;
+    }
+    return (pop->pop_live + j);
+}
+
+static void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob)
 {
     size_t i,j;
     const size_t size = CROMOSOME_SIZE / BATCH;
@@ -81,7 +97,7 @@ void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob)
     }
 }
 
-void pop_crossover_multi_binary(_tag_chromosome_binary* child, 
+static void pop_crossover_multi_binary(_tag_chromosome_binary* child, 
         _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB)
 {
     size_t i;
@@ -94,7 +110,7 @@ void pop_crossover_multi_binary(_tag_chromosome_binary* child,
     }
 }
 
-void pop_crossover_uno_binary(_tag_chromosome_binary* child, 
+static void pop_crossover_uno_binary(_tag_chromosome_binary* child, 
         _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB)
 {
     size_t i;
@@ -123,61 +139,39 @@ void pop_crossover_uno_binary(_tag_chromosome_binary* child,
     }
 }
 
-void pop_selection(population_ranger* pop)
+static void calculate_roulette(population_ranger* pop)
 {
     size_t i;
-    i_max = pop->current;
+    static float err[POP_MAX];
+    static float pi[POP_MAX];
+    static float ki[POP_MAX];
+    static float copy[POP_MAX];
+    float sumf[4];
+    float midf_pi, midf_ki;
     //Stage 1: Error calculation
     sumf[0] = 0;
-    minf[0] = FLT_MAX;
-    for (i = 0;i < i_max;i++)
-    {
+    for (i = 0;i < POP_MAX;i++)
         sumf[0] += err[i] = pop->err(pop->pop_live[i]);
-        if (sumf[0] < minf[0])
-            minf[0] = sumf[0];
-    }
-    midf[0] = sumf[0] / i_max;
     //Stage 2: Normalized Pi
     sumf[1] = 0;
-    minf[1] = FLT_MAX;
-    for (i = 0;i < i_max;i++)
-    {
+    for (i = 0;i < POP_MAX;i++)
         sumf[1] += pi[i] = err[i] / sumf[0];
-        if (sumf[1] < minf[1])
-            minf[1] = sumf[1];
-    }
-    midf[1] = sumf[1] / i_max;
+    midf_pi = sumf[1] / POP_MAX;
     //Stage 3: Normalized Ki
     sumf[2] = 0;
-    minf[2] = FLT_MAX;
-    for (i = 0;i < i_max;i++)
-    {
-        sumf[2] += ki[i] = 2 * midf[1] - pi[i];
-        if (sumf[2] < minf[2])
-            minf[2] = sumf[2];
-    }
-    midf[2] = sumf[2] / i_max;
+    for (i = 0;i < POP_MAX;i++)
+        sumf[2] += ki[i] = 2 * midf_pi - pi[i];
+    midf_ki = sumf[2] / POP_MAX;
     //Stage 4: Next copy
     sumf[3] = 0;
-    minf[3] = FLT_MAX;
-    for (i = 0;i < i_max;i++)
-    {
-        sumf[3] += copy[i] = ki[i] / midf[2];
-        if (sumf[3] < minf[3])
-            minf[3] = sumf[3];
-    }
-    midf[3] = sumf[3] / i_max;
+    for (i = 0;i < POP_MAX;i++)
+        sumf[3] += copy[i] = ki[i] / midf_ki;
     //Stage 5: Floor
-    sumf[4] = 0;
-    minf[4] = FLT_MAX;
-    for (i = 0;i < i_max;i++)
-    {
-        sumf[4] += copy_fl[i] = lround(copy[i]);
-        if (sumf[4] < minf[4])
-            minf[4] = sumf[4];
-    }
-    midf[4] = sumf[4] / i_max;
-    print_selection_table();
+    for (i = 0;i < POP_MAX;i++)
+        pop->copy_roulette[i] = copy[i] / sumf[3];
+    for (i = 1;i < POP_MAX;i++)
+        pop->copy_roulette[i] += pop->copy_roulette[i - 1];
+    print_selection_table(err, pi, ki, copy, sumf, midf_pi, midf_ki);
 }
 
 // Returns random gene
@@ -194,4 +188,17 @@ static inline group_type_gen* genrand()
         }
     }
     return genes_random;
+}
+
+static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
+        float ki[POP_MAX], float copy[POP_MAX],
+        float sumf[4], float midf_pi, float midf_ki)
+{
+    size_t i;
+    for (i = 0;i < POP_MAX;i++)
+    {
+        TRACE_LOG("%1.3f %1.3f %1.3f %1.3f \n", err[i], pi[i], ki[i], copy[i]);
+    }
+    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f \n", sumf[0], sumf[1], sumf[2], sumf[3]);
+    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f \n", 0., midf_pi, midf_ki, 0.);
 }
