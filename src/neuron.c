@@ -1,34 +1,59 @@
 #include "neuron.h"
 #include "logger.h"
 
-#if (LAYER_I_NEURONS > 0)
-    static neuron hidden1[LAYER_I_NEURONS];
-    static float hidden1_weights[LAYER_I_NEURONS][INPUTS];
+#ifdef MEMORY_STATIC
+    #if (LAYER_I_NEURONS > 0)
+        static neuron hidden1[LAYER_I_NEURONS];
+        static float hidden1_weights[LAYER_I_NEURONS][INPUTS];
+    #endif
+    #if (LAYER_II_NEURONS > 0)
+        static neuron hidden2[LAYER_II_NEURONS];
+        static float hidden2_weights[LAYER_II_NEURONS][LAYER_I_NEURONS];
+    #endif
+    #if (LAYER_III_NEURONS > 0)
+        static neuron hidden3[LAYER_III_NEURONS];
+        static float hidden3_weights[LAYER_III_NEURONS][LAYER_II_NEURONS];
+    #endif
+    #if (LAYER_IV_NEURONS > 0)
+        static neuron hidden4[LAYER_IV_NEURONS];
+        static float hidden4_weights[LAYER_IV_NEURONS][LAYER_III_NEURONS];
+    #endif
+    #if (LAYER_V_NEURONS > 0)
+        static neuron hidden5[LAYER_V_NEURONS];
+        static float hidden5_weights[LAYER_V_NEURONS][LAYER_IV_NEURONS];
+    #endif
+    #if (LAYER_VI_NEURONS > 0)
+        static neuron hidden6[LAYER_VI_NEURONS];
+        static float hidden6_weights[LAYER_VI_NEURONS][LAYER_V_NEURONS];
+    #endif
+    #if (LAYER_VII_NEURONS > 0)
+        static neuron hidden7[LAYER_VII_NEURONS];
+        static float hidden7_weights[LAYER_VII_NEURONS][LAYER_VI_NEURONS];
+    #endif
+#elif
+    #if (LAYER_I_NEURONS > 0)
+        static neuron *hidden1;
+    #endif
+    #if (LAYER_II_NEURONS > 0)
+        static neuron *hidden2;
+    #endif
+    #if (LAYER_III_NEURONS > 0)
+        static neuron *hidden3;
+    #endif
+    #if (LAYER_IV_NEURONS > 0)
+        static neuron *hidden4;
+    #endif
+    #if (LAYER_V_NEURONS > 0)
+        static neuron *hidden5;
+    #endif
+    #if (LAYER_VI_NEURONS > 0)
+        static neuron *hidden6;
+    #endif
+    #if (LAYER_VII_NEURONS > 0)
+        static neuron *hidden7;
+    #endif
 #endif
-#if (LAYER_II_NEURONS > 0)
-    static neuron hidden2[LAYER_II_NEURONS];
-    static float hidden2_weights[LAYER_II_NEURONS][LAYER_I_NEURONS];
-#endif
-#if (LAYER_III_NEURONS > 0)
-    static neuron hidden3[LAYER_III_NEURONS];
-    static float hidden3_weights[LAYER_III_NEURONS][LAYER_II_NEURONS];
-#endif
-#if (LAYER_IV_NEURONS > 0)
-    static neuron hidden4[LAYER_IV_NEURONS];
-    static float hidden4_weights[LAYER_IV_NEURONS][LAYER_III_NEURONS];
-#endif
-#if (LAYER_V_NEURONS > 0)
-    static neuron hidden5[LAYER_V_NEURONS];
-    static float hidden5_weights[LAYER_V_NEURONS][LAYER_IV_NEURONS];
-#endif
-#if (LAYER_VI_NEURONS > 0)
-    static neuron hidden6[LAYER_VI_NEURONS];
-    static float hidden6_weights[LAYER_VI_NEURONS][LAYER_V_NEURONS];
-#endif
-#if (LAYER_VII_NEURONS > 0)
-    static neuron hidden7[LAYER_VII_NEURONS];
-    static float hidden7_weights[LAYER_VII_NEURONS][LAYER_VI_NEURONS];
-#endif
+    
     size_t sizer[] = {
 #if (LAYERS > 0)
         LAYER_I_NEURONS
@@ -55,11 +80,65 @@
     
 // Returns floating point random from 0.0 - 1.0.
 static inline float frand();
+#ifndef MEMORY_STATIC
+static inline void mem_alloc();
+#endif
 static float nn_neuron_activation(const network *net, const neuron *one);
+
+#ifndef MEMORY_STATIC
+static inline void mem_alloc()
+{
+    #if (LAYER_I_NEURONS > 0)
+        hidden1 = (neuron*) malloc((LAYER_I_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_II_NEURONS > 0)
+        hidden2 = (neuron*) malloc((LAYER_II_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_III_NEURONS > 0)
+        hidden3 = (neuron*) malloc((LAYER_III_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_IV_NEURONS > 0)
+        hidden4 = (neuron*) malloc((LAYER_IV_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_V_NEURONS > 0)
+        hidden5 = (neuron*) malloc((LAYER_V_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_VI_NEURONS > 0)
+        hidden6 = (neuron*) malloc((LAYER_VI_NEURONS) * sizeof(neuron));
+    #endif
+    #if (LAYER_VII_NEURONS > 0)
+        hidden7 = (neuron*) malloc((LAYER_VII_NEURONS) * sizeof(neuron));
+    #endif
+}
+
+void mem_free(network *net)
+{
+    size_t i,j;
+    for (i = 0;i < LAYERS;i++)
+    {
+        neuron *line;
+        line = (neuron *)net->hidden[i];
+        TRACE_LOG("Layer %zd\n", i);
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron *one;
+            one = line + j;
+            TRACE_LOG("Layer %zd, neuron %zd \n", i, j);
+            free(one->weights);
+            one->inputs = 0;
+            one->outputs = 0;
+        }
+        free(line);
+    }
+}
+#endif
 
 void nn_initialize(network *net, activation_f activator, pd_activation_f pd_activator)
 {
     size_t i, j, k;
+#ifndef MEMORY_STATIC
+    mem_alloc();
+#endif
     for (i = 0;i < INPUTS;i++)
     {
         net->inputs[i] = 0;
@@ -77,7 +156,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[0][i].activator = activator;
         net->hidden[0][i].pd_activator = pd_activator;
         net->hidden[0][i].inputs = 0;
+#ifdef MEMORY_STATIC
         net->hidden[0][i].weights = hidden1_weights[i];
+#elif
+        net->hidden[0][i].weights = (float*) malloc((INPUTS) * sizeof(float));
+#endif
 #if (LAYER_II_NEURONS > 0)
         net->hidden[0][i].outputs = (neuron *)hidden2;
         net->hidden[0][i].no = LAYER_II_NEURONS;
@@ -95,7 +178,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[1][i].activator = activator;
         net->hidden[1][i].pd_activator = pd_activator;
         net->hidden[1][i].inputs = (neuron *)hidden1;
+#ifdef MEMORY_STATIC
         net->hidden[1][i].weights = hidden2_weights[i];
+#elif
+        net->hidden[1][i].weights = (float*) malloc((LAYER_I_NEURONS) * sizeof(float));
+#endif
 #if (LAYER_III_NEURONS > 0)
         net->hidden[1][i].outputs = (neuron *)hidden3;
         net->hidden[1][i].no = LAYER_III_NEURONS;
@@ -113,7 +200,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[2][i].activator = activator;
         net->hidden[2][i].pd_activator = pd_activator;
         net->hidden[2][i].inputs = (neuron *)hidden2;
+#ifdef MEMORY_STATIC
         net->hidden[2][i].weights = hidden3_weights[i];
+#elif
+        net->hidden[2][i].weights = (float*) malloc((LAYER_II_NEURONS) * sizeof(float));
+#endif
 #if (LAYER_IV_NEURONS > 0)
         net->hidden[2][i].outputs = (neuron *)hidden4;
         net->hidden[2][i].no = LAYER_IV_NEURONS;
@@ -131,7 +222,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[3][i].activator = activator;
         net->hidden[3][i].pd_activator = pd_activator;
         net->hidden[3][i].inputs = hidden3;
+#ifdef MEMORY_STATIC
         net->hidden[3][i].weights = hidden4_weights[i];
+#elif
+        net->hidden[3][i].weights = (float*) malloc((LAYER_III_NEURONS) * sizeof(float));
+#endif
 #if (LAYER_V_NEURONS > 0)
         net->hidden[3][i].outputs = (neuron *)hidden5;
         net->hidden[3][i].no = LAYER_V_NEURONS;
@@ -149,7 +244,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[4][i].activator = activator;
         net->hidden[4][i].pd_activator = pd_activator;
         net->hidden[4][i].inputs = hidden4;
+#ifdef MEMORY_STATIC
         net->hidden[4][i].weights = hidden5_weights[i];
+#elif
+        net->hidden[4][i].weights = (float*) malloc((LAYER_IV_NEURONS) * sizeof(float));
+#endif
 #if (LAYER_VI_NEURONS > 0)
         net->hidden[4][i].outputs = (neuron *)hidden6;
         net->hidden[4][i].no = LAYER_VI_NEURONS;
@@ -167,7 +266,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[5][i].activator = activator;
         net->hidden[5][i].pd_activator = pd_activator;
         net->hidden[5][i].inputs = hidden5;
+#ifdef MEMORY_STATIC
         net->hidden[5][i].weights = hidden6_weights[i];
+#elif
+        net->hidden[5][i].weights = (float*) malloc((LAYER_V_NEURONS) * sizeof(float));
+#endif
 #if (LAYER_VII_NEURONS > 0)
         net->hidden[5][i].outputs = (neuron *)hidden7;
         net->hidden[5][i].no = LAYER_VII_NEURONS;
@@ -185,7 +288,11 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[6][i].activator = activator;
         net->hidden[6][i].pd_activator = pd_activator;
         net->hidden[6][i].inputs = hidden6;
+#ifdef MEMORY_STATIC
         net->hidden[6][i].weights = hidden7_weights[i];
+#elif
+        net->hidden[6][i].weights = (float*) malloc((LAYER_VI_NEURONS) * sizeof(float));
+#endif
         net->hidden[6][i].outputs = 0;
         net->hidden[6][i].no = 0;
     }
@@ -198,7 +305,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
             {
                 net->hidden[i][j].weights[k] = frand();
             }
-            net->hidden[i][j].bias = 0.5;
+            net->hidden[i][j].bias = frand();
         }
     }
     net->teaching_speed = 1.;
@@ -347,6 +454,7 @@ void nn_backward(network *net, float target[OUTPUTS])
         {
             neuron *one;
             one = line + j;
+            one->bias -= net->teaching_speed * one->delta;
             if (one->inputs)
             {
                 for (k = 0;k < one->ni;k++)

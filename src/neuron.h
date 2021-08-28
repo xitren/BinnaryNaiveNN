@@ -17,13 +17,8 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-//#define DEBUG_PRINT( format, ... ) { size_glob = \
-//snprintf( buf_glob, sizeof(buf_glob), format, ## __VA_ARGS__  ); \
-//write(1, buf_glob, size_glob); }
-#define DEBUG_PRINT( format, ... )
-#define PRINT( format, ... ) { log_size_glob = \
-snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
-write(1, log_buf_glob, log_size_glob); }
+#define MEMORY_STATIC
+    
 #define POW2(val) (val * val)
 #define INPUTS 1400
 #define LAYERS 3
@@ -71,9 +66,6 @@ write(1, log_buf_glob, log_size_glob); }
     #endif
 #endif
 
-extern char log_buf_glob[128];
-extern size_t log_size_glob;    
-
 typedef float (*activation_f)(const float a);
 typedef float (*pd_activation_f)(const float a);
 
@@ -120,6 +112,9 @@ void nn_inference(network *net);
 void nn_backward(network *net, float target[OUTPUTS]);
 void nn_save(network *net, const char* path);
 void nn_load(network *net, const char* path);
+#ifndef MEMORY_STATIC
+void mem_free(network *net);
+#endif
 float activation(const float a);
 float pd_activation(const float a);
 

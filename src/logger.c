@@ -1,5 +1,5 @@
 /* 
- * File:   logger.h
+ * File:   logger.c
  * Author: xitren
  *
  * Created on 27 августа 2021 г., 15:27

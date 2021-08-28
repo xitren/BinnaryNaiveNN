@@ -16,6 +16,7 @@ extern "C" {
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "binary_tools.h"
 
 #define LEARNER
 typedef uint32_t group_type;
@@ -26,9 +27,6 @@ write(1, log_buf_glob, log_size_glob); }
 #define PRINT( format, ... ) { log_size_glob = \
 snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
 write(1, log_buf_glob, log_size_glob); }
-#define GET_BIT(num, n) ((num >> n) & 1)
-#define SET_BIT(num, n) (num |= (1U << n))
-#define CLR_BIT(num, n) (num &= ~(1U << n))
     
 #define INPUTS 256
 #if ((INPUTS % BATCH) > 0)
