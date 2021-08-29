@@ -21,12 +21,6 @@ extern "C" {
 #define LEARNER
 typedef uint32_t group_type;
 #define BATCH 32
-#define DEBUG_PRINT( format, ... ) { log_size_glob = \
-snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
-write(1, log_buf_glob, log_size_glob); }
-#define PRINT( format, ... ) { log_size_glob = \
-snprintf( log_buf_glob, sizeof(log_buf_glob), format, ## __VA_ARGS__  ); \
-write(1, log_buf_glob, log_size_glob); }
     
 #define INPUTS 256
 #if ((INPUTS % BATCH) > 0)

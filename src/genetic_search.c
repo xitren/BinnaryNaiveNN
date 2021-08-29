@@ -8,26 +8,25 @@
 #include "genetic_search.h"
 #include "logger.h"
 #include "binary_tools.h"
-#include <stdlib.h>
 #include <float.h>
 #include <math.h>
-#include <stdint.h>
 
 #define RAND_TRIGGER(prob) ((int)(RAND_MAX * prob))
 
-static group_type_gen genes_random[CROMOSOME_SIZE / BATCH];
+static group_type_gen genes_random[CHROMOSOME_SIZE / BATCH];
 
 static inline group_type_gen* genrand();
 static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
         float ki[POP_MAX], float copy[POP_MAX],
         float sumf[4], float midf_pi, float midf_ki);
 static void calculate_roulette(population_ranger* pop);
-static void pop_crossover_uno_binary(_tag_chromosome_binary* child, 
-        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB);
-static void pop_crossover_multi_binary(_tag_chromosome_binary* child, 
-        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB);
-static void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob);
+static void pop_crossover_uno_binary(chromosome_binary* child, 
+        chromosome_binary* parentA, chromosome_binary* parentB);
+static void pop_crossover_multi_binary(chromosome_binary* child, 
+        chromosome_binary* parentA, chromosome_binary* parentB);
+static void pop_mutation_binary(chromosome_binary* mutant, float mutation_prob);
 static chromosome_binary* select_from_roulette(population_ranger* pop);
+static inline void print_chromosome(chromosome_binary* chr);
 
 void initiate_population_ranger(population_ranger* pop, error_f func, 
         size_t pop_initial, float mutation_prob, float crossover_prob)
@@ -38,7 +37,9 @@ void initiate_population_ranger(population_ranger* pop, error_f func,
     for (i = 0;i < pop->pop_initial;i++)
     {
         memcpy(&(pop->pop_live[i].genes), genrand(),
-                sizeof(group_type_gen) * CROMOSOME_SIZE / BATCH);
+                sizeof(group_type_gen) * CHROMOSOME_SIZE / BATCH);
+        PRECISE_LOG("Initial populated %zd\n", i);
+        print_chromosome(pop->pop_live + i);
         pop->pop_live[i].population = 0;
     }
     pop->err = func;
@@ -54,12 +55,13 @@ void pop_selection(population_ranger* pop)
     memset(pop_live, 0, sizeof(pop_live));
     for (i = 0;i < POP_MAX;i++)
     {
-        const chromosome_binary* parentA = select_from_roulette();
-        const chromosome_binary* parentB = select_from_roulette();
+        const chromosome_binary* parentA = select_from_roulette(pop);
+        const chromosome_binary* parentB = select_from_roulette(pop);
         if (!parentA || !parentB)
             return;
         pop_crossover_multi_binary(pop_live + i, parentA, parentB);
         pop_mutation_binary(pop_live + i, pop->mutation_prob);
+        pop->pop_live[i].population = parentA->population;
     }
     memcpy(pop->pop_live, pop_live, sizeof(pop_live));
 }
@@ -78,13 +80,16 @@ static chromosome_binary* select_from_roulette(population_ranger* pop)
         ERROR_LOG("Roulette critical error!");
         return 0;
     }
+    PRECISE_LOG("Selected %zd from roulette.", j);
     return (pop->pop_live + j);
 }
 
-static void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_prob)
+static void pop_mutation_binary(chromosome_binary* mutant, float mutation_prob)
 {
     size_t i,j;
-    const size_t size = CROMOSOME_SIZE / BATCH;
+    const size_t size = CHROMOSOME_SIZE / BATCH;
+    PRECISE_LOG("Before mutating\n");
+    print_chromosome(mutant);
     for (i = 0;i < size;i++)
     {
         for (j = 0;j < BATCH;j++)
@@ -95,29 +100,38 @@ static void pop_mutation_binary(_tag_chromosome_binary* mutant, float mutation_p
             }
         }
     }
+    PRECISE_LOG("After mutating\n");
+    print_chromosome(mutant);
 }
 
-static void pop_crossover_multi_binary(_tag_chromosome_binary* child, 
-        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB)
+static void pop_crossover_multi_binary(chromosome_binary* child, 
+        chromosome_binary* parentA, chromosome_binary* parentB)
 {
     size_t i;
-    const size_t size = CROMOSOME_SIZE / BATCH;
+    const size_t size = CHROMOSOME_SIZE / BATCH;
     const group_type_gen* switcher = genrand();
+    PRECISE_LOG("Crossover\n");
+    PRECISE_LOG("Parent A\n");
+    print_chromosome(parentA);
+    PRECISE_LOG("Parent B\n");
+    print_chromosome(parentB);
     for (i = 0;i < size;i++)
     {
         child->genes[i] = ((parentA->genes[i]) & (switcher[i])) |
                             ((parentB->genes[i]) & (!(switcher[i])));
     }
+    PRECISE_LOG("Child\n");
+    print_chromosome(child);
 }
 
-static void pop_crossover_uno_binary(_tag_chromosome_binary* child, 
-        _tag_chromosome_binary* parentA, _tag_chromosome_binary* parentB)
+static void pop_crossover_uno_binary(chromosome_binary* child, 
+        chromosome_binary* parentA, chromosome_binary* parentB)
 {
     size_t i;
-    const size_t point = (size_t)((CROMOSOME_SIZE - 1) * (rand() / (float) (RAND_MAX)));
+    const size_t point = (size_t)((CHROMOSOME_SIZE - 1) * (rand() / (float) (RAND_MAX)));
     const size_t k = point / BATCH;
     const size_t kz = point % BATCH;
-    const size_t size = CROMOSOME_SIZE / BATCH;
+    const size_t size = CHROMOSOME_SIZE / BATCH;
     for (i = 0;i < k;i++)
     {
         child->genes[i] = parentA->genes[i];
@@ -151,7 +165,8 @@ static void calculate_roulette(population_ranger* pop)
     //Stage 1: Error calculation
     sumf[0] = 0;
     for (i = 0;i < POP_MAX;i++)
-        sumf[0] += err[i] = pop->err(pop->pop_live[i]);
+        sumf[0] += err[i] = pop->err((const chromosome_binary* const)
+                (pop->pop_live + i));
     //Stage 2: Normalized Pi
     sumf[1] = 0;
     for (i = 0;i < POP_MAX;i++)
@@ -178,7 +193,8 @@ static void calculate_roulette(population_ranger* pop)
 static inline group_type_gen* genrand()
 {
     size_t i,j;
-    const size_t size = CROMOSOME_SIZE / BATCH;
+    const size_t size = CHROMOSOME_SIZE / BATCH;
+    PRECISE_LOG("Random generated gene\n");
     for (i = 0;i < size;i++)
     {
         genes_random[i] = 0;
@@ -186,8 +202,20 @@ static inline group_type_gen* genrand()
         {
             genes_random[i] |= (rand() & 255U) << j;
         }
+        PRECISE_LOG("%08X-", genes_random[i]);
     }
+    PRECISE_LOG("\n");
     return genes_random;
+}
+
+static inline void print_chromosome(chromosome_binary* chr)
+{
+    size_t i;
+    for (i = 0;i < (CHROMOSOME_SIZE / BATCH);i++)
+    {
+        PRECISE_LOG("%08X-", chr->genes[i]);
+    }
+    PRECISE_LOG("\n");
 }
 
 static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],

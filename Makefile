@@ -10,7 +10,7 @@ CC = gcc
 
 SRCREF = ref/Tinn.c src/logger.c
 SRC = src/neuron.c src/logger.c
-SRCBNN = src/bnn.c src/logger.c
+SRCBNN = src/bnn.c src/logger.c src/genetic_search.c
 
 all:
 	$(CC) -o $(testBIN) $(SRC) $(CFLAGS) $(LDFLAGS)

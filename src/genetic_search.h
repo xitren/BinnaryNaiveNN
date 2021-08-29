@@ -14,15 +14,20 @@ extern "C" {
 
 #define POP_MAX 8
 //!!! Must be the power of 2
-#define CROMOSOME_SIZE 1024
+#define CHROMOSOME_SIZE 1024
 #define BATCH 32
+    
+#include <stdlib.h>
+#include <stdint.h>
     
 typedef uint32_t group_type_gen;
 
 typedef struct _tag_chromosome_binary {
-    group_type_gen genes[CROMOSOME_SIZE / BATCH];
+    group_type_gen genes[CHROMOSOME_SIZE / BATCH];
     size_t population;
 } chromosome_binary;
+
+typedef float (*error_f)(const chromosome_binary* const chr);
 
 typedef struct _tag_population_ranger {
     size_t pop_initial;
@@ -33,11 +38,8 @@ typedef struct _tag_population_ranger {
     float copy_roulette[POP_MAX];
 } population_ranger;
 
-typedef float (*error_f)(const chromosome_binary* const chr);
-
-void initiate_chromosome_binary(chromosome_binary* chr);
-
-void initiate_population_ranger(population_ranger* pop, error_f func);
+void initiate_population_ranger(population_ranger* pop, error_f func, 
+        size_t pop_initial, float mutation_prob, float crossover_prob);
 void population_selection(population_ranger* pop);
 
 #ifdef __cplusplus
