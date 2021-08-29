@@ -14,8 +14,11 @@ extern "C" {
 
 #define POP_MAX 8
 //!!! Must be the power of 2
-#define CHROMOSOME_SIZE 1024
+#define CHROMOSOME_SIZE 512+256
+
+#ifndef BATCH
 #define BATCH 32
+#endif
     
 #include <stdlib.h>
 #include <stdint.h>

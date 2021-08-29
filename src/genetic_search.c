@@ -53,6 +53,7 @@ void pop_selection(population_ranger* pop)
     size_t i;
     static chromosome_binary pop_live[POP_MAX];
     memset(pop_live, 0, sizeof(pop_live));
+    calculate_roulette(pop);
     for (i = 0;i < POP_MAX;i++)
     {
         const chromosome_binary* parentA = select_from_roulette(pop);

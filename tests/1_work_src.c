@@ -70,7 +70,7 @@ int main(void)
             it,
             (double) error / data.rows,
             (double) net.teaching_speed);
-        nn_save(&net, "net.txt");
+        nn_save(&net, "CIFAR10.txt");
     }
     return 0;
 }

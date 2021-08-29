@@ -173,6 +173,30 @@ void build_data(data* data, const char* path, const char* separator,
     return;
 }
 
+uint32_t floats_part_to_uint32(float *data, size_t n)
+{
+    size_t i;
+    uint32_t ret = 0;
+    for (i = 0;i < n;i++)
+    {
+        if (data[i] >= 0.5)
+            SET_BIT(ret, i);
+    }
+    return ret;
+}
+
+uint32_t doubles_part_to_uint32(double *data, size_t n)
+{
+    size_t i;
+    uint32_t ret = 0;
+    for (i = 0;i < n;i++)
+    {
+        if (data[i] >= 0.5)
+            SET_BIT(ret, i);
+    }
+    return ret;
+}
+
 uint32_t floats_to_uint32(float *data)
 {
     size_t i;

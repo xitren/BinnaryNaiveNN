@@ -121,7 +121,7 @@ const uint8_t bit_cnt[] = {
 
 static inline float frand();
 static inline group_type gtrand();
-static inline size_t nn_activation_batch(group_type *in, group_type *w, size_t n);
+static inline void nn_activation_batch(neuron_batch *one);
 #ifdef LEARNER
 static void nn_neuron_batch_activation_full(const network *net, neuron_batch *one);
 inline static void backward_batch_delta(neuron_batch *one, size_t j);
@@ -333,14 +333,13 @@ void nn_initialize(network *net)
                 net->hidden[i][j].output_full[k] = 0.0;
             }
 #endif
-            net->hidden[i][j]->beta = 8;
+            net->hidden[i][j].beta = 8;
         }
     }
     net->teaching_speed = 1;
 }
 
-float nn_error(network *net, group_type *inputs[INPUTS / BATCH], 
-        group_type *outputs[OUTPUTS / BATCH], size_t n)
+float nn_error(network *net, group_type **inputs, group_type **outputs, size_t n)
 {
     size_t i,j,k;
     float err = 0.;
@@ -352,7 +351,7 @@ float nn_error(network *net, group_type *inputs[INPUTS / BATCH],
         {
             for (k = 0;k < BATCH;k++)
             {
-                if (GET_BIT(net->outputs[j], k) != GET_BIT(GET_BIT(outputs[j], k)))
+                if (GET_BIT(net->outputs[j], k) != GET_BIT(outputs[i][j], k))
                 {
                     err += 1.;
                 }
