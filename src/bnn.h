@@ -14,11 +14,12 @@ extern "C" {
     
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
 #include "binary_tools.h"
 
-#define LEARNER
+//#define LEARNER
 typedef uint32_t group_type;
 #define BATCH 32
     

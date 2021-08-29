@@ -38,6 +38,12 @@ test_bnn_work:
 	$(CC) -o $(testBIN) tests/1_work_bnn.c $(SRCBNN) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
+	
+prepare_bitcnt_table:
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/bitcnt_table.c src/logger.c $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
 
 clean:
 	rm -f $(testBIN)

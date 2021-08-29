@@ -15,7 +15,7 @@ extern "C" {
 #include <unistd.h>
 
 #define STREAM 1
-#define FILE_PATH "run.log"
+//#define FILE_PATH "run.log"
 #define DEBUG_LVL 1
 
 #ifdef STREAM

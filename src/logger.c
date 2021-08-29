@@ -20,16 +20,17 @@ int file = 0;
 print_function stream_printer = &write;
 print_function file_printer = &write;
 
+inline void logger_change_stream_printer(print_function new_one)
+{
+    stream_printer = new_one;
+}
+
+#ifdef FILE_PATH
 inline void logger_change_file(char* filename)
 {
     file_path = filename;
     logger_close_file();
     logger_open_file();
-}
-
-inline void logger_change_stream_printer(print_function new_one)
-{
-    stream_printer = new_one;
 }
 
 inline void logger_change_file_printer(print_function new_one)
@@ -71,6 +72,7 @@ void logger_close_file()
         }
     }
 }
+#endif
 
 void logger_print_in_log(int lvl)
 {

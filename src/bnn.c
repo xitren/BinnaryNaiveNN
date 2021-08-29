@@ -1,10 +1,44 @@
 
 #include "bnn.h"
+#include "logger.h"
+#include "binary_tools.h"
 
 #define PTR_CAST(ptr) ((neuron_batch *)(ptr))
 #define PTR_UNCAST(ptr) ((void *)(ptr))
 #define POW2(val) (val * val)
 
+typedef union _tag_caster {
+   group_type gt;
+   uint8_t c[sizeof(group_type)];
+} caster;  
+
+const uint8_t bit_cnt[] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 
+    2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 
+    2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 
+    4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 
+    2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 
+    3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 
+    4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 
+    3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 
+    4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 
+    3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 
+    5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 
+    4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 
+    2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 
+    3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 
+    4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 
+    4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 
+    4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 
+    6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 
+    3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 
+    4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 
+    5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 
+    5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 
+    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 
+    6, 7, 6, 7, 7, 8};
 #if (LAYER_I_NEURONS > 0)
     static neuron_batch hidden1[LAYER_I_NEURONS / BATCH];
     static group_type hidden1_weights[LAYER_I_NEURONS / BATCH][INPUTS];
@@ -79,6 +113,9 @@
     };
 
 static inline float frand();
+static inline group_type gtrand();
+static void nn_neuron_batch_activation(const network *net, neuron_batch *one);
+static inline group_type activation_batch(group_type *in, group_type *w, size_t n);
 #ifdef LEARNER
 static void nn_neuron_batch_activation_full(const network *net, neuron_batch *one);
 inline static void backward_batch_delta(neuron_batch *one, size_t j);
@@ -236,17 +273,82 @@ void nn_initialize(network *net)
         {
             for (k = 0;k < net->hidden[i][j].ni;k++)
             {
-                net->hidden[i][j].weights[k] = frand();
+                net->hidden[i][j].weights[k] = gtrand();
+#ifdef LEARNER
+                net->hidden[i][j].weights_full[k] = frand();
+#endif
             }
             for (k = 0;k < BATCH;k++)
             {
                 net->hidden[i][j].bias = 0;
+#ifdef LEARNER
                 net->hidden[i][j].bias_full[k] = 0.5;
                 net->hidden[i][j].output_full[k] = 0.0;
+#endif
             }
         }
     }
     net->teaching_speed = 1;
+}
+
+
+void nn_inference(network *net)
+{
+    size_t i,j;
+    for (i = 0;i < LAYERS;i++)
+    {
+        neuron_batch *line;
+        line = (neuron_batch *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron_batch *one;
+            one = line + j;
+            nn_neuron_batch_activation(net, one);
+        }
+    }
+}
+
+static inline group_type activation_batch(group_type *in, group_type *w, size_t n)
+{
+    caster cast;
+    group_type res;
+    size_t i,j,k;
+    k = 0;
+    for (i = 0;i < n;i++)
+    {
+        res = in[i] ^ w[i];
+        cast.gt = res;
+        for (j = 0;j < sizeof(group_type);j++)
+        {
+            k += bit_cnt[cast.c[j]];
+        }
+    }
+}
+
+static void nn_neuron_batch_activation(const network *net, neuron_batch *one)
+{
+    size_t i,k,j;
+    for (i = 0;i < BATCH;i++)
+    {
+        if (one->inputs)
+        {
+            for (k = 0;k < one->ni;k++)
+            {
+                for (j = 0;j < BATCH;j++)
+                {
+                }
+            }
+        }
+        else
+        {
+            for (k = 0;k < (INPUTS / BATCH);k++)
+            {
+                for (j = 0;j < BATCH;j++)
+                {
+                }
+            }
+        }
+    }
 }
 
 #ifdef LEARNER
@@ -443,6 +545,18 @@ void nn_backward(network *net, group_type target[OUTPUTS / BATCH])
 static inline float frand()
 {
     return (rand() / (float) (RAND_MAX / 2)) - 1.0;
+}
+
+static inline group_type gtrand()
+{
+    size_t j;
+    group_type gtr = 0;
+    for (j = 0;j < BATCH;j += 8)
+    {
+        gtr |= (rand() & 255U) << j;
+    }
+    PRECISE_LOG("%08X \n", gtr);
+    return gtr;
 }
 
 group_type floats_to_bits(float *data)
