@@ -8,8 +8,8 @@ LDFLAGS = -lm -Os
 
 CC = gcc
 
-SRCREF = ref/Tinn.c src/logger.c
-SRC = src/neuron.c src/logger.c
+SRCREF = ref/Tinn.c src/logger.c src/data_reader.c
+SRC = src/neuron.c src/logger.c src/data_reader.c
 SRCBNN = src/bnn.c src/logger.c src/genetic_search.c
 
 all:

@@ -46,7 +46,7 @@ extern "C" {
     #define TRACE_LOG(format, ...)
 #endif
 #if DEBUG_LVL >= 4
-    #define PRECISE_LOG(format, ...) PRINT_PREPARE(4, "", format, ...)
+    #define PRECISE_LOG(format, ...) PRINT_PREPARE(4, "", format, ## __VA_ARGS__)
 #else
     #define PRECISE_LOG(format, ...)
 #endif

@@ -339,6 +339,29 @@ void nn_initialize(network *net)
     net->teaching_speed = 1;
 }
 
+float nn_error(network *net, group_type *inputs[INPUTS / BATCH], 
+        group_type *outputs[OUTPUTS / BATCH], size_t n)
+{
+    size_t i,j,k;
+    float err = 0.;
+    for (i = 0;i < n;i++)
+    {
+        memcpy(net->inputs, inputs[i], INPUTS / BATCH);
+        nn_inference(net);
+        for (j = 0;j < (OUTPUTS / BATCH);j++)
+        {
+            for (k = 0;k < BATCH;k++)
+            {
+                if (GET_BIT(net->outputs[j], k) != GET_BIT(GET_BIT(outputs[j], k)))
+                {
+                    err += 1.;
+                }
+            }
+        }
+    }
+    err /= OUTPUTS * n;
+    return err;
+}
 
 void nn_inference(network *net)
 {
@@ -596,28 +619,4 @@ static inline group_type gtrand()
     }
     PRECISE_LOG("%08X \n", gtr);
     return gtr;
-}
-
-group_type floats_to_bits(float *data)
-{
-    size_t i;
-    group_type ret = 0;
-    for (i = 0;i < BATCH;i++)
-    {
-        if (data[i] >= 0.5)
-            SET_BIT(ret, i);
-    }
-    return ret;
-}
-
-group_type doubles_to_bits(double *data)
-{
-    size_t i;
-    group_type ret = 0;
-    for (i = 0;i < BATCH;i++)
-    {
-        if (data[i] >= 0.5)
-            SET_BIT(ret, i);
-    }
-    return ret;
 }

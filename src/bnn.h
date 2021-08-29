@@ -142,11 +142,11 @@ extern size_t log_size_glob;
 
 void nn_initialize(network *net);
 void nn_inference(network *net);
+float nn_error(network *net, group_type *inputs[INPUTS / BATCH], 
+        group_type *outputs[OUTPUTS / BATCH], size_t n);
 #ifdef LEARNER
 void nn_backward(network *net, group_type target[OUTPUTS / BATCH]);
 #endif
-group_type floats_to_bits(float *data);
-group_type doubles_to_bits(double *data);
 
 #ifdef __cplusplus
 }
