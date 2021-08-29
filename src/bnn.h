@@ -96,32 +96,32 @@ typedef uint32_t group_type;
 typedef struct _tag_neuron_batch {
     // All the input weights.
     group_type* weights;
-#ifdef LEARNER
-    double* weights_full;
-#endif
-    // Input neurons.
-    void* inputs;
+    // Input data.
+    group_type* input_data;
     // Number of inputs.
     size_t ni;
+    // Beta value
+    size_t beta;
+    // Output value
+    group_type* output;
+    // Number of outputs.
+    size_t no;
+#ifdef LEARNER
     // Bias value
     group_type bias;
-#ifdef LEARNER
+    double* weights_full;
+    // Input neurons.
+    void* inputs;
     double bias_full[BATCH];
     // Delta value
     double delta[BATCH];
-#endif
     // Propagation id.
     int propagator;
-    // Output value
-    group_type output;
-#ifdef LEARNER
     double output_a_full[BATCH];
     double output_full[BATCH];
-#endif
     // Output neurons.
     void* outputs;
-    // Number of outputs.
-    size_t no;
+#endif
 } neuron_batch;
 
 typedef struct _tag_network {

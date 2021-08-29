@@ -16,7 +16,7 @@ extern "C" {
 
 #define STREAM 1
 //#define FILE_PATH "run.log"
-#define DEBUG_LVL 1
+#define DEBUG_LVL 4
 
 #ifdef STREAM
     #define WARNING "WARNING: "

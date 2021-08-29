@@ -42,6 +42,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_I_NEURONS > 0)
     static neuron_batch hidden1[LAYER_I_NEURONS / BATCH];
     static group_type hidden1_weights[LAYER_I_NEURONS / BATCH][INPUTS];
+    static group_type hidden1_output[LAYER_I_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden1_weights_full[LAYER_I_NEURONS / BATCH][INPUTS * BATCH];
     #endif
@@ -49,6 +50,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_II_NEURONS > 0)
     static neuron_batch hidden2[LAYER_II_NEURONS / BATCH];
     static group_type hidden2_weights[LAYER_II_NEURONS / BATCH][LAYER_I_NEURONS];
+    static group_type hidden2_output[LAYER_II_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden2_weights_full[LAYER_II_NEURONS / BATCH][LAYER_I_NEURONS * BATCH];
     #endif
@@ -56,6 +58,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_III_NEURONS > 0)
     static neuron_batch hidden3[LAYER_III_NEURONS / BATCH];
     static group_type hidden3_weights[LAYER_III_NEURONS / BATCH][LAYER_II_NEURONS];
+    static group_type hidden3_output[LAYER_II_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden3_weights_full[LAYER_III_NEURONS / BATCH][LAYER_II_NEURONS * BATCH];
     #endif
@@ -63,6 +66,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_IV_NEURONS > 0)
     static neuron_batch hidden4[LAYER_IV_NEURONS / BATCH];
     static group_type hidden4_weights[LAYER_IV_NEURONS / BATCH][LAYER_III_NEURONS];
+    static group_type hidden4_output[LAYER_III_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden4_weights_full[LAYER_IV_NEURONS / BATCH][LAYER_III_NEURONS * BATCH];
     #endif
@@ -70,6 +74,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_V_NEURONS > 0)
     static neuron_batch hidden5[LAYER_V_NEURONS / BATCH];
     static group_type hidden5_weights[LAYER_V_NEURONS / BATCH][LAYER_IV_NEURONS];
+    static group_type hidden5_output[LAYER_IV_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden5_weights_full[LAYER_V_NEURONS / BATCH][LAYER_IV_NEURONS * BATCH];
     #endif
@@ -77,6 +82,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_VI_NEURONS > 0)
     static neuron_batch hidden6[LAYER_VI_NEURONS / BATCH];
     static group_type hidden6_weights[LAYER_VI_NEURONS / BATCH][LAYER_V_NEURONS];
+    static group_type hidden6_output[LAYER_V_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden6_weights_full[LAYER_VI_NEURONS / BATCH][LAYER_V_NEURONS * BATCH];
     #endif
@@ -84,6 +90,7 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_VII_NEURONS > 0)
     static neuron_batch hidden7[LAYER_VII_NEURONS / BATCH];
     static group_type hidden7_weights[LAYER_VII_NEURONS / BATCH][LAYER_VI_NEURONS];
+    static group_type hidden7_output[LAYER_VI_NEURONS / BATCH];
     #ifdef LEARNER
         static double hidden7_weights_full[LAYER_VII_NEURONS / BATCH][LAYER_VI_NEURONS * BATCH];
     #endif
@@ -114,8 +121,7 @@ const uint8_t bit_cnt[] = {
 
 static inline float frand();
 static inline group_type gtrand();
-static void nn_neuron_batch_activation(const network *net, neuron_batch *one);
-static inline group_type activation_batch(group_type *in, group_type *w, size_t n);
+static inline size_t nn_activation_batch(group_type *in, group_type *w, size_t n);
 #ifdef LEARNER
 static void nn_neuron_batch_activation_full(const network *net, neuron_batch *one);
 inline static void backward_batch_delta(neuron_batch *one, size_t j);
@@ -129,7 +135,7 @@ inline static void backward_weight(network *net);
 
 void nn_initialize(network *net)
 {
-    size_t i, j, k;
+    size_t i, j, k, l;
     for (i = 0;i < (INPUTS / BATCH);i++)
     {
         net->inputs[i] = 0;
@@ -143,18 +149,24 @@ void nn_initialize(network *net)
     net->hidden[0] = hidden1;
     for (i = 0;i < (LAYER_I_NEURONS / BATCH);i++)
     {
-        net->hidden[0][i].ni = INPUTS;
-        net->hidden[0][i].inputs = 0;
-        net->hidden[0][i].weights = hidden1_weights[i];
+        net->hidden[0][i].ni = INPUTS / BATCH;
+        net->hidden[0][i].input_data = net->inputs;
+        net->hidden[0][i].weights = (group_type*) hidden1_weights[i];
 #if (LAYER_II_NEURONS > 0)
-        net->hidden[0][i].outputs = PTR_UNCAST(hidden2);
-        net->hidden[0][i].no = LAYER_II_NEURONS;
+        net->hidden[0][i].output = hidden1_output + i;
+        net->hidden[0][i].no = LAYER_II_NEURONS / BATCH;
 #else
-        net->hidden[0][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[0][i].no = 0;
 #endif
 #ifdef LEARNER
+        net->hidden[0][i].inputs = 0;
         net->hidden[0][i].weights_full = hidden1_weights_full[i];
+#if (LAYER_II_NEURONS > 0)
+        net->hidden[0][i].outputs = PTR_UNCAST(hidden2);
+#else
+        net->hidden[0][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -162,18 +174,24 @@ void nn_initialize(network *net)
     net->hidden[1] = hidden2;
     for (i = 0;i < (LAYER_II_NEURONS / BATCH);i++)
     {
-        net->hidden[1][i].ni = LAYER_I_NEURONS;
-        net->hidden[1][i].inputs = PTR_UNCAST(hidden1);
-        net->hidden[1][i].weights = hidden2_weights[i];
+        net->hidden[1][i].ni = LAYER_I_NEURONS / BATCH;
+        net->hidden[1][i].input_data = hidden1_output;
+        net->hidden[1][i].weights = (group_type*) hidden2_weights[i];
 #if (LAYER_III_NEURONS > 0)
-        net->hidden[1][i].outputs = PTR_UNCAST(hidden3);
-        net->hidden[1][i].no = LAYER_III_NEURONS;
+        net->hidden[1][i].output = hidden2_output + i;
+        net->hidden[1][i].no = LAYER_III_NEURONS / BATCH;
 #else
-        net->hidden[1][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[1][i].no = 0;
 #endif
 #ifdef LEARNER
         net->hidden[1][i].weights_full = hidden2_weights_full[i];
+        net->hidden[1][i].inputs = PTR_UNCAST(hidden1);
+#if (LAYER_III_NEURONS > 0)
+        net->hidden[1][i].outputs = PTR_UNCAST(hidden3);
+#else
+        net->hidden[1][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -181,18 +199,24 @@ void nn_initialize(network *net)
     net->hidden[2] = hidden3;
     for (i = 0;i < (LAYER_III_NEURONS / BATCH);i++)
     {
-        net->hidden[2][i].ni = LAYER_II_NEURONS;
-        net->hidden[2][i].inputs = PTR_UNCAST(hidden2);
-        net->hidden[2][i].weights = hidden3_weights[i];
+        net->hidden[2][i].ni = LAYER_II_NEURONS / BATCH;
+        net->hidden[2][i].input_data = hidden2_output;
+        net->hidden[2][i].weights = (group_type*) hidden3_weights[i];
 #if (LAYER_IV_NEURONS > 0)
-        net->hidden[2][i].outputs = PTR_UNCAST(hidden4);
-        net->hidden[2][i].no = LAYER_IV_NEURONS;
+        net->hidden[2][i].output = hidden3_output + i;
+        net->hidden[2][i].no = LAYER_IV_NEURONS / BATCH;
 #else
-        net->hidden[2][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[2][i].no = 0;
 #endif
 #ifdef LEARNER
         net->hidden[2][i].weights_full = hidden3_weights_full[i];
+        net->hidden[2][i].inputs = PTR_UNCAST(hidden2);
+#if (LAYER_IV_NEURONS > 0)
+        net->hidden[2][i].outputs = PTR_UNCAST(hidden4);
+#else
+        net->hidden[2][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -200,18 +224,24 @@ void nn_initialize(network *net)
     net->hidden[3] = hidden4;
     for (i = 0;i < (LAYER_IV_NEURONS / BATCH);i++)
     {
-        net->hidden[3][i].ni = LAYER_III_NEURONS;
-        net->hidden[3][i].inputs = PTR_UNCAST(hidden3);
-        net->hidden[3][i].weights = hidden4_weights[i];
+        net->hidden[3][i].ni = LAYER_III_NEURONS / BATCH;
+        net->hidden[3][i].input_data = hidden3_output;
+        net->hidden[3][i].weights = (group_type*) hidden4_weights[i];
 #if (LAYER_V_NEURONS > 0)
-        net->hidden[3][i].outputs = PTR_UNCAST(hidden5);
-        net->hidden[3][i].no = LAYER_V_NEURONS;
+        net->hidden[3][i].output = hidden4_output + i;
+        net->hidden[3][i].no = LAYER_V_NEURONS / BATCH;
 #else
-        net->hidden[3][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[3][i].no = 0;
 #endif
 #ifdef LEARNER
         net->hidden[3][i].weights_full = hidden4_weights_full[i];
+        net->hidden[3][i].inputs = PTR_UNCAST(hidden3);
+#if (LAYER_V_NEURONS > 0)
+        net->hidden[3][i].outputs = PTR_UNCAST(hidden5);
+#else
+        net->hidden[3][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -219,18 +249,24 @@ void nn_initialize(network *net)
     net->hidden[4] = hidden5;
     for (i = 0;i < (LAYER_V_NEURONS / BATCH);i++)
     {
-        net->hidden[4][i].ni = LAYER_IV_NEURONS;
-        net->hidden[4][i].inputs = PTR_UNCAST(hidden4);
-        net->hidden[4][i].weights = hidden5_weights[i];
+        net->hidden[4][i].ni = LAYER_IV_NEURONS / BATCH;
+        net->hidden[4][i].input_data = hidden4_output;
+        net->hidden[4][i].weights = (group_type*) hidden5_weights[i];
 #if (LAYER_VI_NEURONS > 0)
-        net->hidden[4][i].outputs = PTR_UNCAST(hidden6);
-        net->hidden[4][i].no = LAYER_VI_NEURONS;
+        net->hidden[4][i].output = hidden5_output + i;
+        net->hidden[4][i].no = LAYER_VI_NEURONS / BATCH;
 #else
-        net->hidden[4][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[4][i].no = 0;
 #endif
 #ifdef LEARNER
         net->hidden[4][i].weights_full = hidden5_weights_full[i];
+        net->hidden[4][i].inputs = PTR_UNCAST(hidden4);
+#if (LAYER_VI_NEURONS > 0)
+        net->hidden[4][i].outputs = PTR_UNCAST(hidden6);
+#else
+        net->hidden[4][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -238,18 +274,24 @@ void nn_initialize(network *net)
     net->hidden[5] = hidden6;
     for (i = 0;i < (LAYER_VI_NEURONS / BATCH);i++)
     {
-        net->hidden[5][i].ni = LAYER_V_NEURONS;
-        net->hidden[5][i].inputs = PTR_UNCAST(hidden5);
-        net->hidden[5][i].weights = hidden6_weights[i];
+        net->hidden[5][i].ni = LAYER_V_NEURONS / BATCH;
+        net->hidden[5][i].input_data = hidden5_output;
+        net->hidden[5][i].weights = (group_type*) hidden6_weights[i];
 #if (LAYER_VII_NEURONS > 0)
-        net->hidden[5][i].outputs = PTR_UNCAST(hidden7);
-        net->hidden[5][i].no = LAYER_VII_NEURONS;
+        net->hidden[5][i].output = hidden6_output + i;
+        net->hidden[5][i].no = LAYER_VII_NEURONS / BATCH;
 #else
-        net->hidden[5][i].outputs = 0;
+        net->hidden[0][i].output = net->outputs + i;
         net->hidden[5][i].no = 0;
 #endif
 #ifdef LEARNER
         net->hidden[5][i].weights_full = hidden6_weights_full[i];
+        net->hidden[5][i].inputs = PTR_UNCAST(hidden5);
+#if (LAYER_VII_NEURONS > 0)
+        net->hidden[5][i].outputs = PTR_UNCAST(hidden7);
+#else
+        net->hidden[5][i].outputs = 0;
+#endif
 #endif
     }
 #endif
@@ -257,13 +299,15 @@ void nn_initialize(network *net)
     net->hidden[6] = hidden7;
     for (i = 0;i < (LAYER_VII_NEURONS / BATCH);i++)
     {
-        net->hidden[6][i].ni = LAYER_VI_NEURONS;
-        net->hidden[6][i].inputs = PTR_UNCAST(hidden6);
-        net->hidden[6][i].weights = hidden7_weights[i];
-        net->hidden[6][i].outputs = 0;
+        net->hidden[6][i].ni = LAYER_VI_NEURONS / BATCH;
+        net->hidden[6][i].input_data = hidden6_output;
+        net->hidden[6][i].weights = (group_type*) hidden7_weights[i];
+        net->hidden[6][i].output = net->outputs + i;
         net->hidden[6][i].no = 0;
 #ifdef LEARNER
         net->hidden[6][i].weights_full = hidden7_weights_full[i];
+        net->hidden[6][i].inputs = PTR_UNCAST(hidden6);
+        net->hidden[6][i].outputs = 0;
 #endif
     }
 #endif
@@ -271,21 +315,25 @@ void nn_initialize(network *net)
     {
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
-            for (k = 0;k < net->hidden[i][j].ni;k++)
+            for (l = 0;l < BATCH;l++)
             {
-                net->hidden[i][j].weights[k] = gtrand();
+                for (k = 0;k < net->hidden[i][j].ni;k++)
+                {
+                    net->hidden[i][j].weights[l * (net->hidden_cnt[i]) + k] = gtrand();
 #ifdef LEARNER
-                net->hidden[i][j].weights_full[k] = frand();
+                    net->hidden[i][j].weights_full[l * (net->hidden_cnt[i]) + k] = frand();
 #endif
+                }
             }
+#ifdef LEARNER
             for (k = 0;k < BATCH;k++)
             {
                 net->hidden[i][j].bias = 0;
-#ifdef LEARNER
                 net->hidden[i][j].bias_full[k] = 0.5;
                 net->hidden[i][j].output_full[k] = 0.0;
-#endif
             }
+#endif
+            net->hidden[i][j]->beta = 8;
         }
     }
     net->teaching_speed = 1;
@@ -299,56 +347,47 @@ void nn_inference(network *net)
     {
         neuron_batch *line;
         line = (neuron_batch *)net->hidden[i];
+        TRACE_LOG("Layer %zu\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
             neuron_batch *one;
             one = line + j;
-            nn_neuron_batch_activation(net, one);
+            TRACE_LOG("Layer %zu, neuron batch %zu \n", i, j);
+            nn_activation_batch(one);
         }
     }
 }
 
-static inline group_type activation_batch(group_type *in, group_type *w, size_t n)
+static inline void nn_activation_batch(neuron_batch *one)
 {
     caster cast;
     group_type res;
+    group_type ret;
     size_t i,j,k;
-    k = 0;
-    for (i = 0;i < n;i++)
+    ret = 0;
+    for (j = 0;j < BATCH;j++)
     {
-        res = in[i] ^ w[i];
-        cast.gt = res;
-        for (j = 0;j < sizeof(group_type);j++)
+        k = 0;
+        for (i = 0;i < one->ni;i++)
         {
-            k += bit_cnt[cast.c[j]];
-        }
-    }
-}
-
-static void nn_neuron_batch_activation(const network *net, neuron_batch *one)
-{
-    size_t i,k,j;
-    for (i = 0;i < BATCH;i++)
-    {
-        if (one->inputs)
-        {
-            for (k = 0;k < one->ni;k++)
+            res = !(one->input_data[i] ^ one->weights[j * one->ni + i]);
+            PRECISE_LOG("XOR %08X = %08X ^ %08X.", 
+                    one->input_data[i] ^ one->weights[j * one->ni + i],
+                    one->input_data[i], one->weights[j * one->ni + i]);
+            PRECISE_LOG("XNOR %08X.", res);
+            cast.gt = res;
+            for (j = 0;j < BATCH;j++)
             {
-                for (j = 0;j < BATCH;j++)
-                {
-                }
+                k += bit_cnt[cast.c[j]];
             }
         }
-        else
-        {
-            for (k = 0;k < (INPUTS / BATCH);k++)
-            {
-                for (j = 0;j < BATCH;j++)
-                {
-                }
-            }
-        }
+        PRECISE_LOG("%zu > %zu", k, one->beta);
+        if (k > one->beta)
+            SET_BIT(ret, j);
+        PRECISE_LOG("Output %08X.", ret);
     }
+    PRECISE_LOG("Output written %08X.", ret);
+    *(one->output) = ret;
 }
 
 #ifdef LEARNER
