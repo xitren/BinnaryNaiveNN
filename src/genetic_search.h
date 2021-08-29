@@ -14,7 +14,7 @@ extern "C" {
 
 #define POP_MAX 8
 //!!! Must be the power of 2
-#define CHROMOSOME_SIZE 512+256
+#define CHROMOSOME_SIZE 18432
 
 #ifndef BATCH
 #define BATCH 32

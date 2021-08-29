@@ -15,7 +15,7 @@ static group_type** outputs;
 float error_parser(const chromosome_binary* const chr)
 {
     size_t err;
-    const size_t size = CHROMOSOME_SIZE / BATCH;
+    //set_weights(chr->genes, CHROMOSOME_SIZE / BATCH);
     err = nn_error(&bnn, inputs, outputs, data_reader.rows);
     return err;
 }
@@ -55,11 +55,7 @@ int main(void)
         {
             inputs[i][j] = floats_to_uint32(&(data_reader.in[i][j * BATCH]));
         }
-        for (size_t j = 0; (j < (OUTPUTS / BATCH)) ; j++)
-        {
-            outputs[i][j] = floats_part_to_uint32(
-                    &(data_reader.tg[i][j * BATCH]), data_reader.nops);
-        }
+        outputs[i][0] = floats_part_to_uint32(data_reader.tg[i], data_reader.nops);
     }
     DESCRIBE_LOG("Data conversion ended\n");
     

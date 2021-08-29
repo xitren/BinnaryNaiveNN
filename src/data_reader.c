@@ -128,17 +128,19 @@ static void parse(data* data, char* line,
         const char* separator, const size_t row)
 {
     const size_t cols = data->nips + data->nops;
-    size_t col = 1;
+    size_t col = 0;
     char *token;
     token = strtok(line, separator);
     while((token != NULL) && (col < cols))
     {
         const float val = atof(token);
-        PRECISE_LOG("%1.2f ", val);
-        data->in[row][0] = val;
+        if (col < data->nips)
+            data->in[row][col] = val;
+        else
+            data->tg[row][col - data->nips] = val;
+        col++;
         token = strtok(NULL, separator);
     }
-    PRECISE_LOG("\n");
 }
 
 // Parses file from path getting all inputs and outputs for the neural network. 
@@ -147,7 +149,7 @@ void build_data(data* data, const char* path, const char* separator,
         const size_t nips, const size_t nops)
 {
     DESCRIBE_LOG("Opening data file\n");
-    size_t max_line;
+    size_t max_line = 150;
     FILE* file = fopen(path, "r");
     if(file == NULL)
     {
@@ -155,11 +157,12 @@ void build_data(data* data, const char* path, const char* separator,
         return;
     }
     DESCRIBE_LOG("Countings rows\n");
-    const size_t rows = lns(file, &max_line);
+//    const size_t rows = lns(file, &max_line);
+    const size_t rows = 10;
     DESCRIBE_LOG("Memory allocated\n");
     ndata(data, nips, nops, rows);
     DESCRIBE_LOG("Started data parsing\n");
-    for(int row = 0; row < rows; row++)
+    for(size_t row = 0; row < rows; row++)
     {
         char* line = readln(file, max_line);
         parse(data, line, separator, row);
@@ -169,7 +172,7 @@ void build_data(data* data, const char* path, const char* separator,
     }
     DESCRIBE_LOG("\nend\n");
     fclose(file);
-    shuffle(data);
+//    shuffle(data);
     return;
 }
 
@@ -201,7 +204,7 @@ uint32_t floats_to_uint32(float *data)
 {
     size_t i;
     uint32_t ret = 0;
-    for (i = 0;i < sizeof(uint32_t);i++)
+    for (i = 0;i < 32U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
@@ -213,7 +216,7 @@ uint32_t doubles_to_uint32(double *data)
 {
     size_t i;
     uint32_t ret = 0;
-    for (i = 0;i < sizeof(uint32_t);i++)
+    for (i = 0;i < 32U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
@@ -225,7 +228,7 @@ uint16_t floats_to_uint16(float *data)
 {
     size_t i;
     uint16_t ret = 0;
-    for (i = 0;i < sizeof(uint16_t);i++)
+    for (i = 0;i < 16U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
@@ -237,7 +240,7 @@ uint16_t doubles_to_uint16(double *data)
 {
     size_t i;
     uint16_t ret = 0;
-    for (i = 0;i < sizeof(uint16_t);i++)
+    for (i = 0;i < 16U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
@@ -249,7 +252,7 @@ uint8_t floats_to_uint8(float *data)
 {
     size_t i;
     uint8_t ret = 0;
-    for (i = 0;i < sizeof(uint8_t);i++)
+    for (i = 0;i < 8U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
@@ -261,7 +264,7 @@ uint8_t doubles_to_uint8(double *data)
 {
     size_t i;
     uint8_t ret = 0;
-    for (i = 0;i < sizeof(uint8_t);i++)
+    for (i = 0;i < 8U;i++)
     {
         if (data[i] >= 0.5)
             SET_BIT(ret, i);
