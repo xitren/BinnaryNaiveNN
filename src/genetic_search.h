@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#define POP_MAX 8
+#define POP_MAX 100
 //!!! Must be the power of 2
 #define CHROMOSOME_SIZE 18432
 

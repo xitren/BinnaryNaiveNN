@@ -15,7 +15,7 @@ static group_type** outputs;
 float error_parser(const chromosome_binary* const chr)
 {
     size_t err;
-    //set_weights(chr->genes, CHROMOSOME_SIZE / BATCH);
+    set_weights(chr->genes, CHROMOSOME_SIZE / BATCH);
     err = nn_error(&bnn, inputs, outputs, data_reader.rows);
     return err;
 }
@@ -37,7 +37,7 @@ int main(void)
     
     DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&bnn);
-    initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.01, 0.6);
+    initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.06, 0.6);
     DESCRIBE_LOG("Initialization ended\n");
     
     DESCRIBE_LOG("Data conversion\n");
@@ -61,7 +61,7 @@ int main(void)
     
     // Train, baby, train.
     DESCRIBE_LOG("Learning started\n");
-    for (size_t it = 0; (it < 10) ; it++)
+    for (size_t it = 0; (it < 30000) ; it++)
     {
         pop_selection(&pranger);
     }

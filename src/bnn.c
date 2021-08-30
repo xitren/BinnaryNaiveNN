@@ -354,17 +354,17 @@ void nn_initialize(network *net)
 #endif
     for (i = 0;i < LAYERS;i++)
     {
-        TRACE_LOG("Layer %zu\n", i);
+        PRECISE_LOG("Layer %zu\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
-            TRACE_LOG("Layer %zu, neuron batch %zu \n", i, j);
+            PRECISE_LOG("Layer %zu, neuron batch %zu \n", i, j);
             for (l = 0;l < BATCH;l++)
             {
                 for (k = 0;k < net->hidden[i][j].ni;k++)
                 {
                     net->hidden[i][j].weights[l * (net->hidden[i][j].ni) + k]
                             = gtrand();
-                    TRACE_LOG("Weight (NN %p, W %p, %zu): %08X\n",
+                    PRECISE_LOG("Weight (NN %p, W %p, %zu): %08X\n",
                             &(net->hidden[i][j]),
                             &(net->hidden[i][j].weights[l * (net->hidden[i][j].ni) + k]),
                             l * (net->hidden[i][j].ni) + k,
@@ -387,10 +387,10 @@ void nn_initialize(network *net)
     }
     for (i = 0;i < LAYERS;i++)
     {
-        TRACE_LOG("Layer %zu\n", i);
+        PRECISE_LOG("Layer %zu\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
-            TRACE_LOG("Layer %zu, neuron batch %zu \n", i, j);
+            PRECISE_LOG("Layer %zu, neuron batch %zu \n", i, j);
             PRECISE_LOG("Output (%p)\n", net->hidden[i][j].output);
         }
     }
@@ -404,31 +404,34 @@ float nn_error(network *net, group_type **inputs, group_type **outputs, size_t n
     for (i = 0;i < n;i++)
     {
         memcpy(net->inputs, inputs[i], INPUTS / BATCH);
-        TRACE_LOG("Input data\n");
+        PRECISE_LOG("Input data\n");
         for (j = 0;j < (INPUTS / BATCH);j++)
         {
-            TRACE_LOG("%08X-", net->inputs[j]);
+            PRECISE_LOG("%08X-", net->inputs[j]);
         }
-        TRACE_LOG("\n");
+        PRECISE_LOG("\n");
         nn_inference(net);
-        TRACE_LOG("nn_inference end\n");
+        PRECISE_LOG("nn_inference end\n");
         for (j = 0;j < (OUTPUTS / BATCH);j++)
         {
+            PRECISE_LOG("O(%08X) == o(%08X)\n", net->outputs[j], outputs[i][j]);
             for (k = 0;k < BATCH;k++)
             {
-                TRACE_LOG("%zu %zu %zu \n", i, j, k);
-                TRACE_LOG("O %u \n", GET_BIT(net->outputs[j], k));
-                TRACE_LOG("%p %p \n", outputs, outputs[i]);
-                TRACE_LOG("o %u \n", GET_BIT(outputs[i][j], k));
+                PRECISE_LOG("%zu %zu %zu \n", i, j, k);
+                PRECISE_LOG("%u == %u  %d\n", GET_BIT(net->outputs[j], k), 
+                        GET_BIT(outputs[i][j], k), (GET_BIT(net->outputs[j], k) ^ GET_BIT(outputs[i][j], k)));
+                PRECISE_LOG("%p %p \n", outputs, outputs[i]);
                 if (GET_BIT(net->outputs[j], k) != GET_BIT(outputs[i][j], k))
                 {
                     err += 1.;
+                    PRECISE_LOG("err %f\n", err);
                 }
             }
         }
     }
-    err /= OUTPUTS * n;
-    TRACE_LOG("nn_error end\n");
+    PRECISE_LOG("Total err %f\n", err);
+    err = (err * err * err) / (OUTPUTS * n);
+    PRECISE_LOG("nn_error end\n");
     return err;
 }
 
@@ -439,12 +442,12 @@ void nn_inference(network *net)
     {
         neuron_batch *line;
         line = (neuron_batch *)net->hidden[i];
-        TRACE_LOG("Layer %zu\n", i);
+        PRECISE_LOG("Layer %zu\n", i);
         for (j = 0;j < net->hidden_cnt[i];j++)
         {
             neuron_batch *one;
             one = line + j;
-            TRACE_LOG("Layer %zu, neuron batch %zu \n", i, j);
+            PRECISE_LOG("Layer %zu, neuron batch %zu \n", i, j);
             nn_activation_batch(one);
             PRECISE_LOG("nn_activation_batch Layer %zu, neuron batch %zu end.\n", i, j);
         }
@@ -463,7 +466,7 @@ static inline void nn_activation_batch(neuron_batch *one)
         k = 0;
         for (i = 0;i < one->ni;i++)
         {
-            TRACE_LOG("Weight (NN %p, W %p, %zu): %08X\n", one,
+            PRECISE_LOG("Weight (NN %p, W %p, %zu): %08X\n", one,
                     &(one->weights[j * one->ni + i]),
                     j * one->ni + i, one->weights[j * one->ni + i]);
             res = ~(one->input_data[i] ^ one->weights[j * one->ni + i]);

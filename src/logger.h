@@ -13,10 +13,11 @@ extern "C" {
 #endif
     
 #include <unistd.h>
+#include <stdio.h>
 
 #define STREAM 1
 //#define FILE_PATH "run.log"
-#define DEBUG_LVL 4
+#define DEBUG_LVL 3
 
 #ifdef STREAM
     #define WARNING "WARNING: "
