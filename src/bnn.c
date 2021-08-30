@@ -174,6 +174,23 @@ void set_weights(group_type* weights, size_t n)
 #endif
 }
 
+void nn_set_beta(network *net, group_type *betas)
+{
+    size_t i,j,k;
+    k = 0;
+    for (i = 0;i < LAYERS;i++)
+    {
+        neuron_batch *line;
+        line = (neuron_batch *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron_batch *one;
+            one = line + j;
+            one = betas[k++];
+        }
+    }
+}
+
 void nn_initialize(network *net)
 {
     size_t i, j, k, l;
@@ -415,7 +432,7 @@ float nn_error(network *net, group_type **inputs, group_type **outputs, size_t n
         for (j = 0;j < (OUTPUTS / BATCH);j++)
         {
             PRECISE_LOG("O(%08X) == o(%08X)\n", net->outputs[j], outputs[i][j]);
-            for (k = 0;k < BATCH;k++)
+            for (k = 0;k < 10;k++)
             {
                 PRECISE_LOG("%zu %zu %zu \n", i, j, k);
                 PRECISE_LOG("%u == %u  %d\n", GET_BIT(net->outputs[j], k), 

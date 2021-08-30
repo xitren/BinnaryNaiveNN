@@ -12,9 +12,9 @@
 extern "C" {
 #endif
 
-#define POP_MAX 100
+#define POP_MAX 20
 //!!! Must be the power of 2
-#define CHROMOSOME_SIZE 18432
+#define CHROMOSOME_SIZE 18432 + 3*32
 
 #ifndef BATCH
 #define BATCH 32
@@ -36,6 +36,7 @@ typedef struct _tag_population_ranger {
     size_t pop_initial;
     chromosome_binary pop_live[POP_MAX];
     error_f err;
+    float err_calc[POP_MAX];
     float mutation_prob;
     float crossover_prob;
     float copy_roulette[POP_MAX];

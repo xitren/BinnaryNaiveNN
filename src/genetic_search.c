@@ -28,8 +28,10 @@ static void pop_crossover_multi_binary(chromosome_binary* child,
         chromosome_binary* parentA, chromosome_binary* parentB);
 static void pop_mutation_binary(chromosome_binary* mutant, float mutation_prob);
 static chromosome_binary* select_from_roulette(population_ranger* pop);
+static void swap_sort(population_ranger* pop);
 static inline void print_chromosome(chromosome_binary* chr);
 static inline float frand();
+static inline void print_err_table(population_ranger* pop);
 
 void initiate_population_ranger(population_ranger* pop, error_f func, 
         size_t pop_initial, float mutation_prob, float crossover_prob)
@@ -54,25 +56,74 @@ void initiate_population_ranger(population_ranger* pop, error_f func,
 void pop_selection(population_ranger* pop)
 {
     size_t i;
-    static chromosome_binary pop_live[POP_MAX];
-    memset(pop_live, 0, sizeof(pop_live));
+    chromosome_binary pop_live;
+    memset(&pop_live, 0, sizeof(chromosome_binary));
+    swap_sort(pop);
     calculate_roulette(pop);
+    print_err_table(pop);
+    for (i = 1;i < POP_MAX;i++)
+        pop->copy_roulette[i] += pop->copy_roulette[i - 1];
+    PRECISE_LOG("Selection 1.\n");
+    const chromosome_binary* parentA = select_from_roulette(pop);
+    PRECISE_LOG("Selection 2.\n");
+    chromosome_binary* parentB = select_from_roulette(pop);
+    while (parentB == parentA)
+        parentB = select_from_roulette(pop);
+    if (!parentA || !parentB)
+        return;
+    pop_crossover_multi_binary(&pop_live, parentA, parentB);
     for (i = 0;i < POP_MAX;i++)
     {
-        PRECISE_LOG("Selection 1.\n");
-        const chromosome_binary* parentA = select_from_roulette(pop);
-        PRECISE_LOG("Selection 2.\n");
-        chromosome_binary* parentB = select_from_roulette(pop);
-        while (parentB == parentA)
-            parentB = select_from_roulette(pop);
-        if (!parentA || !parentB)
-            return;
-        pop_crossover_multi_binary(pop_live + i, parentA, parentB);
-        pop_mutation_binary(pop_live + i, pop->mutation_prob);
-        pop_live[i].population = parentA->population + 1;
-        print_chromosome(pop_live + i);
+        if (frand() < pop->mutation_prob)
+        {
+            pop_mutation_binary(pop->pop_live + i, pop->crossover_prob);
+            PRECISE_LOG("%zu Mutated! \n", i);
+            pop->err_calc[i] = pop->err((const chromosome_binary* const)(pop->pop_live + i));
+            break;
+        }
     }
-    memcpy(pop->pop_live, pop_live, sizeof(pop_live));
+    pop_live.population = parentA->population + 1;
+    print_chromosome(&pop_live);
+    pop->pop_live[POP_MAX - 1] = pop_live;
+    pop->err_calc[POP_MAX - 1] = pop->err((const chromosome_binary* const)
+            (pop->pop_live + POP_MAX - 1));
+    print_err_table(pop);
+    PRECISE_LOG("=================================================\n");
+}
+
+static void swap_sort(population_ranger* pop)
+{
+    size_t temp;
+    size_t i,j;
+    static size_t swapper[POP_MAX];
+    static float err_calc[POP_MAX];
+    static float copy_roulette[POP_MAX];
+    static chromosome_binary pop_live[POP_MAX];
+    for (i = 0;i < POP_MAX;i++)
+    {
+        swapper[i] = i;
+    }
+    for (i = 0;i < POP_MAX;i++)
+    {
+        for (j = 1;j < POP_MAX;j++)
+        {
+            if (pop->err_calc[swapper[j - 1]] > pop->err_calc[swapper[j]])
+            {
+                temp = swapper[j - 1];
+                swapper[j - 1] = swapper[j];
+                swapper[j] = temp;
+            }
+        }
+    }
+    memcpy(pop_live, pop->pop_live, sizeof(pop_live));
+    memcpy(err_calc, pop->err_calc, sizeof(err_calc));
+    memcpy(copy_roulette, pop->copy_roulette, sizeof(copy_roulette));
+    for (i = 0;i < POP_MAX;i++)
+    {
+        pop->pop_live[i] = pop_live[swapper[i]];
+        pop->err_calc[i] = err_calc[swapper[i]];
+        pop->copy_roulette[i] = copy_roulette[swapper[i]];
+    }
 }
 
 // Returns floating point random 1.0.
@@ -181,8 +232,11 @@ static void calculate_roulette(population_ranger* pop)
     //Stage 1: Error calculation
     sumf[0] = 0;
     for (i = 0;i < POP_MAX;i++)
-        sumf[0] += err[i] = pop->err((const chromosome_binary* const)
-                (pop->pop_live + i));
+    {
+        err[i] = pop->err((const chromosome_binary* const)(pop->pop_live + i));
+        pop->err_calc[i] = err[i];
+        sumf[0] += err[i];
+    }
     //Stage 2: Normalized Pi
     sumf[1] = 0;
     for (i = 0;i < POP_MAX;i++)
@@ -201,8 +255,6 @@ static void calculate_roulette(population_ranger* pop)
     for (i = 0;i < POP_MAX;i++)
         pop->copy_roulette[i] = copy[i] / sumf[3];
     print_selection_table(err, pi, ki, copy, pop->copy_roulette, sumf, midf_pi, midf_ki);
-    for (i = 1;i < POP_MAX;i++)
-        pop->copy_roulette[i] += pop->copy_roulette[i - 1];
 }
 
 // Returns random gene
@@ -240,13 +292,30 @@ static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
         float sumf[4], float midf_pi, float midf_ki)
 {
     size_t i;
-    TRACE_LOG("Selection table\n");
+    PRECISE_LOG("Selection table\n");
     for (i = 0;i < POP_MAX;i++)
     {
-        TRACE_LOG("%02zu) %1.3f %1.3f %1.3f %1.3f %1.3f \n",
+        PRECISE_LOG("%02zu) %1.3f %1.3f %1.3f %1.3f %1.3f \n",
                 i, err[i], pi[i], ki[i], copy[i], copy_r[i]);
     }
-    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f \n", sumf[0], sumf[1], sumf[2], sumf[3]);
-    TRACE_LOG("%1.3f %1.3f %1.3f %1.3f \n", 0., midf_pi, midf_ki, 0.);
+    PRECISE_LOG("%1.3f %1.3f %1.3f %1.3f \n", sumf[0], sumf[1], sumf[2], sumf[3]);
+    PRECISE_LOG("%1.3f %1.3f %1.3f %1.3f \n", 0., midf_pi, midf_ki, 0.);
+    PRECISE_LOG("========================\n");
+}
+
+static inline void print_err_table(population_ranger* pop)
+{
+    size_t i;
+    float mid = 0., min = pop->err_calc[0];
+    TRACE_LOG("Error table\n");
+    for (i = 0;i < POP_MAX;i++)
+    {
+        TRACE_LOG("%02zu) %1.3f \n", i, pop->err_calc[i]);
+        mid += pop->err_calc[i];
+        if (min > pop->err_calc[i])
+            min = pop->err_calc[i];
+    }
+    mid /= POP_MAX;
+    TRACE_LOG("Minimal err: %1.2f. Middle err: %1.2f.\n", min, mid);
     TRACE_LOG("========================\n");
 }
