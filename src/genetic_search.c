@@ -307,15 +307,15 @@ static inline void print_err_table(population_ranger* pop)
 {
     size_t i;
     float mid = 0., min = pop->err_calc[0];
-    TRACE_LOG("Error table\n");
+    PRECISE_LOG("Error table\n");
     for (i = 0;i < POP_MAX;i++)
     {
-        TRACE_LOG("%02zu) %1.3f \n", i, pop->err_calc[i]);
+        PRECISE_LOG("%02zu) %1.3f \n", i, pop->err_calc[i]);
         mid += pop->err_calc[i];
         if (min > pop->err_calc[i])
             min = pop->err_calc[i];
     }
     mid /= POP_MAX;
     TRACE_LOG("Minimal err: %1.2f. Middle err: %1.2f.\n", min, mid);
-    TRACE_LOG("========================\n");
+    PRECISE_LOG("========================\n");
 }

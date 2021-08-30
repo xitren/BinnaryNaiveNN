@@ -38,7 +38,7 @@ int main(void)
     
     DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&bnn);
-    initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.1, 0.6);
+    initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.1, 0.5);
     DESCRIBE_LOG("Initialization ended\n");
     
     DESCRIBE_LOG("Data conversion\n");
@@ -62,7 +62,8 @@ int main(void)
     
     // Train, baby, train.
     DESCRIBE_LOG("Learning started\n");
-    for (size_t it = 0; (it < 100000) ; it++)
+    pranger.err_calc[0] = 100;
+    for (size_t it = 0; (it < 100000) && (pranger.err_calc[0] > 0.01) ; it++)
     {
         pop_selection(&pranger);
         if (!(it % 1000))

@@ -432,7 +432,7 @@ float nn_error(network *net, group_type **inputs, group_type **outputs, size_t n
         for (j = 0;j < (OUTPUTS / BATCH);j++)
         {
             PRECISE_LOG("O(%08X) == o(%08X)\n", net->outputs[j], outputs[i][j]);
-            for (k = 0;k < 10;k++)
+            for (k = 0;k < BATCH;k++)
             {
                 PRECISE_LOG("%zu %zu %zu \n", i, j, k);
                 PRECISE_LOG("%u == %u  %d\n", GET_BIT(net->outputs[j], k), 
