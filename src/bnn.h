@@ -23,11 +23,11 @@ extern "C" {
 typedef uint32_t group_type;
 #define BATCH 32
     
-#define INPUTS 256
+#define INPUTS 11200
 #if ((INPUTS % BATCH) > 0)
     #error "Not a full butch!"
 #endif
-#define LAYERS 2
+#define LAYERS 4
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
@@ -37,6 +37,8 @@ typedef uint32_t group_type;
         #error "Not a full butch!"
     #endif
     #define OUTPUTS LAYER_VII_NEURONS
+#else
+    #define LAYER_VII_NEURONS 0
 #endif
 #if (LAYERS > 5)
     #define LAYER_VI_NEURONS 32
@@ -46,52 +48,79 @@ typedef uint32_t group_type;
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_VI_NEURONS
     #endif
+#else
+    #define LAYER_VI_NEURONS 0
 #endif
 #if (LAYERS > 4)
-    #define LAYER_V_NEURONS 32
+    #define LAYER_V_NEURONS 11200
     #if ((LAYER_V_NEURONS % BATCH) > 0)
         #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_V_NEURONS
     #endif
+#else
+    #define LAYER_V_NEURONS 0
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS 32
+    #define LAYER_IV_NEURONS 1024
     #if ((LAYER_IV_NEURONS % BATCH) > 0)
         #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
+#else
+    #define LAYER_IV_NEURONS 0
 #endif
 #if (LAYERS > 2)
-    #define LAYER_III_NEURONS 32
+    #define LAYER_III_NEURONS 512
     #if ((LAYER_III_NEURONS % BATCH) > 0)
         #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_III_NEURONS
     #endif
+#else
+    #define LAYER_III_NEURONS 0
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 32
+    #define LAYER_II_NEURONS 1024
     #if ((LAYER_II_NEURONS % BATCH) > 0)
         #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
+#else
+    #define LAYER_II_NEURONS 0
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 64
+    #define LAYER_I_NEURONS 4096
     #if ((LAYER_I_NEURONS % BATCH) > 0)
         #error "Not a full butch!"
     #endif
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif
+#else
+    #define LAYER_I_NEURONS 0
 #endif
+
+#define HIDDEN1_WEIGHTS ((LAYER_I_NEURONS / BATCH) * INPUTS)
+#define HIDDEN2_WEIGHTS ((LAYER_II_NEURONS / BATCH) * LAYER_I_NEURONS)
+#define HIDDEN3_WEIGHTS ((LAYER_III_NEURONS / BATCH) * LAYER_II_NEURONS)
+#define HIDDEN4_WEIGHTS ((LAYER_IV_NEURONS / BATCH) * LAYER_III_NEURONS)
+#define HIDDEN5_WEIGHTS ((LAYER_V_NEURONS / BATCH) * LAYER_IV_NEURONS)
+#define HIDDEN6_WEIGHTS ((LAYER_VI_NEURONS / BATCH) * LAYER_V_NEURONS)
+#define HIDDEN7_WEIGHTS ((LAYER_VII_NEURONS / BATCH) * LAYER_VI_NEURONS)
+
+#define HIDDEN_WEIGHTS_SIZE (HIDDEN1_WEIGHTS + HIDDEN2_WEIGHTS \
+            + HIDDEN3_WEIGHTS + HIDDEN4_WEIGHTS + HIDDEN5_WEIGHTS \
+            + HIDDEN6_WEIGHTS + HIDDEN7_WEIGHTS)
+#define BATCHES_SIZE ((LAYER_I_NEURONS + LAYER_II_NEURONS \
+            + LAYER_III_NEURONS + LAYER_IV_NEURONS + LAYER_V_NEURONS \
+            + LAYER_VI_NEURONS + LAYER_VII_NEURONS) / BATCH)
 
 typedef struct _tag_neuron_batch {
     // All the input weights.

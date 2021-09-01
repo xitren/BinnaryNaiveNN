@@ -29,20 +29,20 @@ int main(void)
     srand(time(0));
     
     const int nips = 700;
-    const int nops = 1;
+    const int nops = 700;
     float target[10];
     data data;
     
     // Load the training set.
     DESCRIBE_LOG("Read started\n");
-    build_data(&data, "tests/input_data_700-1.txt", "\t", nips, nops);
+    build_data(&data, "tests/input_data_700-700.txt", "\t", nips, nops);
     DESCRIBE_LOG("Files readed\n");
     
     // Train, baby, train.
     network net;
     DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
-    net.teaching_speed = 4;
+    net.teaching_speed = 10;
     float error = 0.9 * data.rows;
     DESCRIBE_LOG("Learning started\n");
     for (int it = 0; (it < 10000) 
@@ -65,12 +65,15 @@ int main(void)
             TRACE_LOG("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.999f;
+        net.teaching_speed *= 0.99f;
         DESCRIBE_LOG("%d) error %.12f :: learning rate %f\n",
             it,
             (double) error / data.rows,
             (double) net.teaching_speed);
-        nn_save(&net, "work_700-1.net");
+        nn_save(&net, "work_700-700.net");
     }
+    char fname[100];
+    snprintf(fname, sizeof(fname), "work_700-700-%f.net", error / data.rows);
+    nn_save(&net, fname);
     return 0;
 }

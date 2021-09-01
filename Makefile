@@ -47,7 +47,7 @@ test_src_work:
 	
 test_bnn_work:
 	rm -f $(testBIN)
-	$(CC) -o $(testBIN) tests/1_work_bnn.c $(SRCBNN) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	$(CC) -o $(testBIN) tests/1_work_learn_bnn.c $(SRCBNN) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 	

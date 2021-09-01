@@ -43,7 +43,6 @@ const uint8_t bit_cnt[] = {
 #if (LAYER_I_NEURONS > 0)
     static neuron_batch hidden1[LAYER_I_NEURONS / BATCH];
     static group_type hidden1_weights[LAYER_I_NEURONS / BATCH][INPUTS];
-    #define HIDDEN1_WEIGHTS ((LAYER_I_NEURONS / BATCH) * INPUTS)
     #ifdef LEARNER
         static double hidden1_weights_full[LAYER_I_NEURONS / BATCH][INPUTS * BATCH];
     #endif
@@ -52,7 +51,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden2[LAYER_II_NEURONS / BATCH];
     static group_type hidden2_weights[LAYER_II_NEURONS / BATCH][LAYER_I_NEURONS];
     static group_type hidden1_output[LAYER_I_NEURONS / BATCH];
-    #define HIDDEN2_WEIGHTS ((LAYER_II_NEURONS / BATCH) * LAYER_I_NEURONS)
     #ifdef LEARNER
         static double hidden2_weights_full[LAYER_II_NEURONS / BATCH][LAYER_I_NEURONS * BATCH];
     #endif
@@ -61,7 +59,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden3[LAYER_III_NEURONS / BATCH];
     static group_type hidden3_weights[LAYER_III_NEURONS / BATCH][LAYER_II_NEURONS];
     static group_type hidden2_output[LAYER_II_NEURONS / BATCH];
-    #define HIDDEN3_WEIGHTS ((LAYER_III_NEURONS / BATCH) * LAYER_II_NEURONS)
     #ifdef LEARNER
         static double hidden3_weights_full[LAYER_III_NEURONS / BATCH][LAYER_II_NEURONS * BATCH];
     #endif
@@ -70,7 +67,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden4[LAYER_IV_NEURONS / BATCH];
     static group_type hidden4_weights[LAYER_IV_NEURONS / BATCH][LAYER_III_NEURONS];
     static group_type hidden3_output[LAYER_II_NEURONS / BATCH];
-    #define HIDDEN4_WEIGHTS ((LAYER_IV_NEURONS / BATCH) * LAYER_III_NEURONS)
     #ifdef LEARNER
         static double hidden4_weights_full[LAYER_IV_NEURONS / BATCH][LAYER_III_NEURONS * BATCH];
     #endif
@@ -79,7 +75,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden5[LAYER_V_NEURONS / BATCH];
     static group_type hidden5_weights[LAYER_V_NEURONS / BATCH][LAYER_IV_NEURONS];
     static group_type hidden4_output[LAYER_III_NEURONS / BATCH];
-    #define HIDDEN5_WEIGHTS ((LAYER_V_NEURONS / BATCH) * LAYER_IV_NEURONS)
     #ifdef LEARNER
         static double hidden5_weights_full[LAYER_V_NEURONS / BATCH][LAYER_IV_NEURONS * BATCH];
     #endif
@@ -88,7 +83,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden6[LAYER_VI_NEURONS / BATCH];
     static group_type hidden6_weights[LAYER_VI_NEURONS / BATCH][LAYER_V_NEURONS];
     static group_type hidden5_output[LAYER_IV_NEURONS / BATCH];
-    #define HIDDEN6_WEIGHTS ((LAYER_VI_NEURONS / BATCH) * LAYER_V_NEURONS)
     #ifdef LEARNER
         static double hidden6_weights_full[LAYER_VI_NEURONS / BATCH][LAYER_V_NEURONS * BATCH];
     #endif
@@ -97,7 +91,6 @@ const uint8_t bit_cnt[] = {
     static neuron_batch hidden7[LAYER_VII_NEURONS / BATCH];
     static group_type hidden7_weights[LAYER_VII_NEURONS / BATCH][LAYER_VI_NEURONS];
     static group_type hidden6_output[LAYER_V_NEURONS / BATCH];
-    #define HIDDEN7_WEIGHTS ((LAYER_VII_NEURONS / BATCH) * LAYER_VI_NEURONS)
     #ifdef LEARNER
         static double hidden7_weights_full[LAYER_VII_NEURONS / BATCH][LAYER_VI_NEURONS * BATCH];
     #endif

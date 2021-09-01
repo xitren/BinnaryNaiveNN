@@ -11,17 +11,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    
+#include <stdlib.h>
+#include <stdint.h>
+#include "bnn.h"
 
 #define POP_MAX 200
 //!!! Must be the power of 2
-#define CHROMOSOME_SIZE (18432 + 3*32)
+#define CHROMOSOME_SIZE ((HIDDEN_WEIGHTS_SIZE + BATCHES_SIZE) * BATCH)
 
 #ifndef BATCH
 #define BATCH 32
 #endif
-    
-#include <stdlib.h>
-#include <stdint.h>
     
 typedef uint32_t group_type_gen;
 

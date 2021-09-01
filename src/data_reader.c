@@ -172,7 +172,7 @@ void build_data(data* data, const char* path, const char* separator,
     }
     DESCRIBE_LOG("\nend\n");
     fclose(file);
-//    shuffle(data);
+    shuffle(data);
     return;
 }
 
