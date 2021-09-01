@@ -52,15 +52,16 @@ int main(void)
         ERROR_LOG("Outputs memory allocation error!\n");
     for (size_t i = 0; (i < data_reader.rows) ; i++)
     {
-        inputs[i] = (group_type*) malloc(sizeof(group_type) * INPUTS / BATCH);
-        outputs[i] = (group_type*) malloc(sizeof(group_type) * OUTPUTS / BATCH);
-        for (size_t j = 0; (j < (INPUTS / BATCH)) ; j++)
+        inputs[i] = (group_type*) malloc(sizeof(group_type) * INPUTS / 4);
+        outputs[i] = (group_type*) malloc(sizeof(group_type) * OUTPUTS / 4);
+        for (size_t j = 0; (j < (INPUTS / 4)) ; j++)
         {
-            inputs[i][j] = floats_to_uint32(&(data_reader.in[i][j * BATCH]));
+            inputs[i][j] = floats_uint8_to_uint32(&(data_reader.in[i][j * 4]));
+            outputs[i][j] = floats_uint8_to_uint32(data_reader.tg[i][j * 4]);
         }
-        outputs[i][0] = floats_part_to_uint32(data_reader.tg[i], data_reader.nops);
     }
     DESCRIBE_LOG("Data conversion ended\n");
+    exit(0);
     
     // Train, baby, train.
     DESCRIBE_LOG("Learning started\n");

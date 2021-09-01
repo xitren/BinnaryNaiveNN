@@ -18,6 +18,11 @@ static void dfree(const data* d);
 static void parse(data* data, char* line,
         const char* separator, const size_t row);
 
+typedef union _tag_caster {
+   uint32_t gt;
+   uint8_t c[sizeof(uint32_t)];
+} caster;  
+
 // Returns the number of lines in a file.
 static size_t lns(FILE* const file, size_t* max_string)
 {
@@ -188,6 +193,18 @@ uint32_t floats_part_to_uint32(float *data, size_t n)
     return ret;
 }
 
+uint32_t floats_to_uint32(float *data)
+{
+    size_t i;
+    uint32_t ret = 0;
+    for (i = 0;i < 32U;i++)
+    {
+        if (data[i] >= 0.5)
+            SET_BIT(ret, i);
+    }
+    return ret;
+}
+
 uint32_t doubles_part_to_uint32(double *data, size_t n)
 {
     size_t i;
@@ -200,16 +217,26 @@ uint32_t doubles_part_to_uint32(double *data, size_t n)
     return ret;
 }
 
-uint32_t floats_to_uint32(float *data)
+uint32_t uint8_to_uint32(uint8_t *data)
 {
+    caster cast;
     size_t i;
-    uint32_t ret = 0;
-    for (i = 0;i < 32U;i++)
+    for (i = 0;i < 4U;i++)
     {
-        if (data[i] >= 0.5)
-            SET_BIT(ret, i);
+        cast.c[i] = data[i];
     }
-    return ret;
+    return cast.gt[i];
+}
+
+uint32_t floats_uint8_to_uint32(float *data)
+{
+    caster cast;
+    size_t i;
+    for (i = 0;i < 4U;i++)
+    {
+        cast.c[i] = (uint8_t)data[i];
+    }
+    return cast.gt[i];
 }
 
 uint32_t doubles_to_uint32(double *data)
