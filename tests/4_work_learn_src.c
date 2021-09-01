@@ -47,7 +47,7 @@ int main(void)
     DESCRIBE_LOG("Learning started\n");
     for (int it = 0; (it < 10000) 
             && (net.teaching_speed > 0.001) 
-            && ((error / data.rows) > 0.0001); it++)
+            && ((error / data.rows) > 0.00001); it++)
     {
         error = 0.;
         for (int row = 0; row < data.rows; row++)

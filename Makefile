@@ -41,7 +41,7 @@ test_src_learn:
 	
 test_src_work:
 	rm -f $(testBIN)
-	$(CC) -o $(testBIN) tests/2_work_src.c $(SRC) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	$(CC) -o $(testBIN) tests/2_work_src.c $(SRC) -DINPUTS=1400 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 	

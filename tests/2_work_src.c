@@ -148,7 +148,7 @@ int main(void)
     DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&net,&activation,&pd_activation);
     DESCRIBE_LOG("Load started\n");
-    nn_load(&net, "net_usial_pressure.txt");
+    nn_load(&net, "work_1400-1.net");
     DESCRIBE_LOG("Inference started\n");
     for (int k = 0; k < (data.rows - nips); k++)
     {
