@@ -23,7 +23,19 @@ test_ref_work:
 	
 test_src_learn:
 	rm -f $(testBIN)
-	$(CC) -o $(testBIN) tests/1_work_src.c $(SRC) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	$(CC) -o $(testBIN) tests/1_work_learn_src.c $(SRC) -DINPUTS=1400 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/2_work_learn_src.c $(SRC) -DINPUTS=700 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/3_work_learn_src.c $(SRC) -DINPUTS=200 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/4_work_learn_src.c $(SRC) -DINPUTS=140 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/5_work_learn_src.c $(SRC) -DINPUTS=20 $(CFLAGS) $(INCLUDES) $(LDFLAGS)
 	./$(testBIN)
 	rm -f $(testBIN)
 	
