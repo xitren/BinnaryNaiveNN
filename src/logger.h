@@ -42,12 +42,17 @@ extern "C" {
     #define WARNING_LOG(format, ...)
 #endif
 #if DEBUG_LVL >= 3
-    #define TRACE_LOG(format, ...) PRINT_PREPARE(3, TRACE, format, ## __VA_ARGS__)
+    #define DEBUG_LOG(format, ...) PRINT_PREPARE(3, "", format, ## __VA_ARGS__)
+#else
+    #define DEBUG_LOG(format, ...)
+#endif
+#if DEBUG_LVL >= 4
+    #define TRACE_LOG(format, ...) PRINT_PREPARE(4, TRACE, format, ## __VA_ARGS__)
 #else
     #define TRACE_LOG(format, ...)
 #endif
-#if DEBUG_LVL >= 4
-    #define PRECISE_LOG(format, ...) PRINT_PREPARE(4, "", format, ## __VA_ARGS__)
+#if DEBUG_LVL >= 5
+    #define PRECISE_LOG(format, ...) PRINT_PREPARE(5, "", format, ## __VA_ARGS__)
 #else
     #define PRECISE_LOG(format, ...)
 #endif

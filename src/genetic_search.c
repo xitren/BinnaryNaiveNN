@@ -20,7 +20,7 @@ static group_type_gen genes_random[CHROMOSOME_SIZE / BATCH];
 static inline group_type_gen* genrand();
 static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
         float ki[POP_MAX], float copy[POP_MAX], float copy_r[POP_MAX],
-        float sumf[4], float midf_pi, float midf_ki);
+        float sumf[3]);
 static void calculate_roulette(population_ranger* pop);
 static void pop_crossover_uno_binary(chromosome_binary* child, 
         chromosome_binary* parentA, chromosome_binary* parentB);
@@ -43,6 +43,26 @@ void initiate_population_ranger(population_ranger* pop, error_f func,
     {
         memcpy(&(pop->pop_live[i].genes), genrand(),
                 sizeof(group_type_gen) * (CHROMOSOME_SIZE / BATCH));
+        PRECISE_LOG("Initial populated %zd\n", i);
+        print_chromosome(pop->pop_live + i);
+        pop->pop_live[i].population = 0;
+    }
+    pop->err = func;
+    pop->pop_initial = pop_initial;
+    pop->mutation_prob = mutation_prob;
+    pop->crossover_prob = crossover_prob;
+}
+
+void initiate_population(population_ranger* pop, chromosome_binary* init,
+        error_f func, size_t pop_initial,
+        float mutation_prob, float crossover_prob)
+{
+    size_t i;
+    // Tinn does not seed the random number generator.
+    srand(time(0));
+    for (i = 0;i < POP_MAX;i++)
+    {
+        pop->pop_live[i] = init[i];
         PRECISE_LOG("Initial populated %zd\n", i);
         print_chromosome(pop->pop_live + i);
         pop->pop_live[i].population = 0;
@@ -228,7 +248,6 @@ static void calculate_roulette(population_ranger* pop)
     static float ki[POP_MAX];
     static float copy[POP_MAX];
     float sumf[4];
-    float midf_pi, midf_ki;
     //Stage 1: Error calculation
     sumf[0] = 0;
     for (i = 0;i < POP_MAX;i++)
@@ -239,22 +258,16 @@ static void calculate_roulette(population_ranger* pop)
     }
     //Stage 2: Normalized Pi
     sumf[1] = 0;
-    for (i = 0;i < POP_MAX;i++)
-        sumf[1] += pi[i] = err[i] / sumf[0];
-    midf_pi = sumf[1] / POP_MAX;
-    //Stage 3: Normalized Ki
     sumf[2] = 0;
     for (i = 0;i < POP_MAX;i++)
-        sumf[2] += ki[i] = 2 * midf_pi - pi[i];
-    midf_ki = sumf[2] / POP_MAX;
-    //Stage 4: Next copy
-    sumf[3] = 0;
+    {
+        sumf[1] += pi[i] = err[i] / sumf[0];
+        sumf[2] += copy[i] = 1 - sumf[1];
+    }
+    //Stage 3: Floor
     for (i = 0;i < POP_MAX;i++)
-        sumf[3] += copy[i] = ki[i] / midf_ki;
-    //Stage 5: Floor
-    for (i = 0;i < POP_MAX;i++)
-        pop->copy_roulette[i] = copy[i] / sumf[3];
-    print_selection_table(err, pi, ki, copy, pop->copy_roulette, sumf, midf_pi, midf_ki);
+        pop->copy_roulette[i] = copy[i] / sumf[2];
+    print_selection_table(err, pi, ki, copy, pop->copy_roulette, sumf);
 }
 
 // Returns random gene
@@ -289,7 +302,7 @@ static inline void print_chromosome(chromosome_binary* chr)
 
 static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
         float ki[POP_MAX], float copy[POP_MAX], float copy_r[POP_MAX],
-        float sumf[4], float midf_pi, float midf_ki)
+        float sumf[3])
 {
     size_t i;
     PRECISE_LOG("Selection table\n");
@@ -298,8 +311,7 @@ static inline void print_selection_table(float err[POP_MAX], float pi[POP_MAX],
         PRECISE_LOG("%02zu) %1.3f %1.3f %1.3f %1.3f %1.3f \n",
                 i, err[i], pi[i], ki[i], copy[i], copy_r[i]);
     }
-    PRECISE_LOG("%1.3f %1.3f %1.3f %1.3f \n", sumf[0], sumf[1], sumf[2], sumf[3]);
-    PRECISE_LOG("%1.3f %1.3f %1.3f %1.3f \n", 0., midf_pi, midf_ki, 0.);
+    PRECISE_LOG("%1.3f %1.3f %1.3f \n", sumf[0], sumf[1], sumf[2]);
     PRECISE_LOG("========================\n");
 }
 
@@ -307,15 +319,15 @@ static inline void print_err_table(population_ranger* pop)
 {
     size_t i;
     float mid = 0., min = pop->err_calc[0];
-    PRECISE_LOG("Error table\n");
+    TRACE_LOG("Error table\n");
     for (i = 0;i < POP_MAX;i++)
     {
-        PRECISE_LOG("%02zu) %1.3f \n", i, pop->err_calc[i]);
+        TRACE_LOG("%02zu) %1.3f \n", i, pop->err_calc[i]);
         mid += pop->err_calc[i];
         if (min > pop->err_calc[i])
             min = pop->err_calc[i];
     }
     mid /= POP_MAX;
-    TRACE_LOG("Minimal err: %1.2f. Middle err: %1.2f.\n", min, mid);
-    PRECISE_LOG("========================\n");
+    DEBUG_LOG("Minimal err: %1.2f. Middle err: %1.2f.\n", min, mid);
+    TRACE_LOG("========================\n");
 }

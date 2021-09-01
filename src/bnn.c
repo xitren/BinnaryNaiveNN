@@ -140,7 +140,7 @@ inline static void backward_delta(network *net, group_type target[OUTPUTS / BATC
 inline static void backward_weight(network *net);
 #endif
 
-void set_weights(group_type* weights, size_t n)
+void nn_set_weights(group_type* weights)
 {
 #if (LAYERS > 0)
     memcpy(hidden1_weights, weights, HIDDEN1_WEIGHTS);
@@ -172,6 +172,63 @@ void set_weights(group_type* weights, size_t n)
             + HIDDEN4_WEIGHTS + HIDDEN5_WEIGHTS
             + HIDDEN6_WEIGHTS, HIDDEN7_WEIGHTS);
 #endif
+}
+
+void nn_save(network *net, const char* path)
+{
+    size_t i,j,k;
+    FILE* const file = fopen(path, "w");
+    if (!file)
+    {
+        ERROR_LOG("Can't open log file!");
+    }
+    for (i = 0;i < LAYERS;i++)
+    {
+        fprintf(file, "===========\n");
+        neuron_batch *line;
+        line = (neuron_batch *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron_batch *one;
+            one = line + j;
+            fprintf(file, "%zu\n", one->beta);
+            fprintf(file, "%zu\n", one->ni);
+            for (k = 0;k < one->ni;k++)
+            {
+                fprintf(file, "%zu\t", one->weights[k]);
+            }
+            fprintf(file, "\n");
+        }
+    }
+    fclose(file);
+}
+
+void nn_load(network *net, const char* path)
+{
+    size_t i,j,k;
+    FILE* const file = fopen(path, "r");
+    if (!file)
+    {
+        ERROR_LOG("Can't open log file!");
+    }
+    for (i = 0;i < LAYERS;i++)
+    {
+        fscanf(file, "===========\n");
+        neuron_batch *line;
+        line = (neuron_batch *)net->hidden[i];
+        for (j = 0;j < net->hidden_cnt[i];j++)
+        {
+            neuron_batch *one;
+            one = line + j;
+            fscanf(file, "%zu\n", &(one->beta));
+            fscanf(file, "%zu\n", &(one->ni));
+            for (k = 0;k < one->ni;k++)
+            {
+                fscanf(file, "%zu\t", &(one->weights[k]));
+            }
+            fscanf(file, "\n");
+        }
+    }
 }
 
 void nn_set_beta(network *net, group_type *betas)

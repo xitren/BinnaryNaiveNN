@@ -145,7 +145,9 @@ void nn_inference(network *net);
 float nn_error(network *net, group_type *inputs[INPUTS / BATCH], 
         group_type *outputs[OUTPUTS / BATCH], size_t n);
 void nn_set_beta(network *net, group_type *betas);
-void set_weights(group_type* weights, size_t n);
+void nn_set_weights(group_type* weights);
+void nn_save(network *net, const char* path);
+void nn_load(network *net, const char* path);
 #ifdef LEARNER
 void nn_backward(network *net, group_type target[OUTPUTS / BATCH]);
 #endif

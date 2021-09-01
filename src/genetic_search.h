@@ -12,9 +12,9 @@
 extern "C" {
 #endif
 
-#define POP_MAX 20
+#define POP_MAX 200
 //!!! Must be the power of 2
-#define CHROMOSOME_SIZE 18432 + 3*32
+#define CHROMOSOME_SIZE (18432 + 3*32)
 
 #ifndef BATCH
 #define BATCH 32
@@ -45,6 +45,9 @@ typedef struct _tag_population_ranger {
 void initiate_population_ranger(population_ranger* pop, error_f func, 
         size_t pop_initial, float mutation_prob, float crossover_prob);
 void population_selection(population_ranger* pop);
+void initiate_population(population_ranger* pop, chromosome_binary* init,
+        error_f func, size_t pop_initial,
+        float mutation_prob, float crossover_prob);
 
 #ifdef __cplusplus
 }

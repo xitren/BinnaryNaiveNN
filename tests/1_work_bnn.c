@@ -15,7 +15,7 @@ static group_type** outputs;
 float error_parser(const chromosome_binary* const chr)
 {
     size_t err;
-    set_weights(chr->genes, CHROMOSOME_SIZE / BATCH);
+    nn_set_weights(chr->genes);
     nn_set_beta(&bnn, &(chr->genes[(CHROMOSOME_SIZE / BATCH) - 1 - 3]));
     err = nn_error(&bnn, inputs, outputs, data_reader.rows);
     return err;
@@ -24,12 +24,15 @@ float error_parser(const chromosome_binary* const chr)
 // Learns and predicts hand written digits with 98% accuracy.
 int main(void)
 {
+    DESCRIBE_LOG("main\n");
     // Tinn does not seed the random number generator.
     srand(time(0));
     
     const int nips = 255;
     const int nops = 10;
     population_ranger pranger;
+    chromosome_binary best[POP_MAX];
+    chromosome_binary winner;
     
     // Load the training set.
     DESCRIBE_LOG("Read started\n");
@@ -38,7 +41,6 @@ int main(void)
     
     DESCRIBE_LOG("Initialization started\n");
     nn_initialize(&bnn);
-    initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.1, 0.5);
     DESCRIBE_LOG("Initialization ended\n");
     
     DESCRIBE_LOG("Data conversion\n");
@@ -62,13 +64,43 @@ int main(void)
     
     // Train, baby, train.
     DESCRIBE_LOG("Learning started\n");
-    pranger.err_calc[0] = 100;
-    for (size_t it = 0; (it < 100000) && (pranger.err_calc[0] > 0.01) ; it++)
+    for (size_t runs = 0;runs < POP_MAX; runs++)
+    {
+        DESCRIBE_LOG("%zu population started\n", runs);
+        float min = 10000000;
+        pranger.err_calc[0] = min;
+        initiate_population_ranger(&pranger, &error_parser, POP_MAX, 0.5, 0.5);
+        for (size_t it = 0; (it < 1000) && (pranger.err_calc[0] > 0.01) ; it++)
+        {
+            pop_selection(&pranger);
+            if (!(it % 100))
+                DESCRIBE_LOG("Iteration %zu\n", it);
+            if (pranger.err_calc[0] < min)
+            {
+                min = pranger.err_calc[0];
+                best[runs] = pranger.pop_live[0];
+            }
+        }
+    }
+    float min = 10000000;
+    pranger.err_calc[0] = min;
+    DESCRIBE_LOG("Best population started\n");
+    initiate_population(&pranger, best, &error_parser, POP_MAX, 0.1, 0.5);
+    for (size_t it = 0; (it < 1000) && (pranger.err_calc[0] > 0.01) ; it++)
     {
         pop_selection(&pranger);
-        if (!(it % 1000))
+        if (!(it % 100))
             DESCRIBE_LOG("Iteration %zu\n", it);
+        if (pranger.err_calc[0] < min)
+        {
+            min = pranger.err_calc[0];
+            winner = pranger.pop_live[0];
+        }
     }
+    DESCRIBE_LOG("The winner is %f\n", min);
+    nn_set_weights(winner.genes);
+    nn_set_beta(&bnn, &(winner.genes[(CHROMOSOME_SIZE / BATCH) - 1 - 3]));
+    nn_save(&bnn, "bnn_CIFAR.net");
     return 0;
 }
 
