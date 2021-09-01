@@ -17,7 +17,7 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-#define MEMORY_STATIC
+//#define MEMORY_STATIC
     
 #define POW2(val) (val * val)
 //#define INPUTS 1400

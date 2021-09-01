@@ -30,7 +30,7 @@
         static neuron hidden7[LAYER_VII_NEURONS];
         static float hidden7_weights[LAYER_VII_NEURONS][LAYER_VI_NEURONS];
     #endif
-#elif
+#else
     #if (LAYER_I_NEURONS > 0)
         static neuron *hidden1;
     #endif
@@ -158,7 +158,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[0][i].inputs = 0;
 #ifdef MEMORY_STATIC
         net->hidden[0][i].weights = hidden1_weights[i];
-#elif
+#else
         net->hidden[0][i].weights = (float*) malloc((INPUTS) * sizeof(float));
 #endif
 #if (LAYER_II_NEURONS > 0)
@@ -180,7 +180,7 @@ void nn_initialize(network *net, activation_f activator, pd_activation_f pd_acti
         net->hidden[1][i].inputs = (neuron *)hidden1;
 #ifdef MEMORY_STATIC
         net->hidden[1][i].weights = hidden2_weights[i];
-#elif
+#else
         net->hidden[1][i].weights = (float*) malloc((LAYER_I_NEURONS) * sizeof(float));
 #endif
 #if (LAYER_III_NEURONS > 0)
