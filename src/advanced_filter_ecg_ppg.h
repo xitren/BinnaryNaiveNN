@@ -25,7 +25,7 @@ extern "C" {
 #include <math.h>
 
 #define WINDOW 700
-#define RESAMPLING 4
+#define DOTS 4
 //#define SIMD
 
 typedef struct _tag_adv_filter adv_filter;
@@ -39,17 +39,17 @@ struct _tag_adv_filter {
     uint16_t* ecg;
     uint16_t* ppg;
     // All the parsed data.
-    uint8_t* ecg_parsed;
-    uint8_t* ppg_parsed;
+    uint16_t* ecg_parsed;
+    uint16_t* ppg_parsed;
     // Max & min
-    uint16_t min_ecg;
-    uint16_t max_ecg;
-    uint16_t min_ecg_it;
-    uint16_t max_ecg_it;
-    uint16_t min_ppg;
-    uint16_t max_ppg;
-    uint16_t min_ppg_it;
-    uint16_t max_ppg_it;
+    uint16_t min_ecg[3];
+    uint16_t max_ecg[3];
+    uint16_t min_ecg_it[3];
+    uint16_t max_ecg_it[3];
+    uint16_t min_ppg[3];
+    uint16_t max_ppg[3];
+    uint16_t min_ppg_it[3];
+    uint16_t max_ppg_it[3];
     // Ring buffer
     size_t tail;
     size_t head;
@@ -57,9 +57,9 @@ struct _tag_adv_filter {
     // Parser func
     filter_parser fp;
     // Releaser.
-    uint32_t* mark_ecg;
-    uint32_t* mark_ppg;
-    uint8_t border;
+    uint16_t* mark_ecg;
+    uint16_t* mark_ppg;
+    size_t mark_head;
 };
 
 void adv_filter_init(adv_filter* filt);
