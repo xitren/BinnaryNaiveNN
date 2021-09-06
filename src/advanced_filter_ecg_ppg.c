@@ -66,6 +66,7 @@ static void init_adv_filter_input(adv_filter* filt, uint16_t data_ecg, uint16_t 
     ecg[filt->head % WINDOW] = data_ecg;
     ppg[filt->head % WINDOW] = data_ppg;
     filt->head++;
+    TRACE_LOG("head = %zu\n", filt->head);
     if (filt->head >= WINDOW)
     {
         DEBUG_LOG("Start window collected\n");
@@ -106,10 +107,11 @@ static inline void adv_correction(adv_filter* filt)
 {
     TRACE_LOG("adv_correction\n");
     const size_t middle = (filt->head - WINDOW / 2) % WINDOW;
-    uint32_t ecg_t = ecg[middle] - filt->min_ecg;
-    uint32_t ppg_t = ppg[middle] - filt->min_ecg;
-    PRECISE_LOG("selected %u = %hu - %hu\n", ecg_t, ecg[middle], filt->min_ecg);
-    PRECISE_LOG("selected %u = %hu - %hu\n", ppg_t, ppg[middle], filt->min_ppg);
+    PRECISE_LOG("middle %u\n", middle);
+    uint32_t ecg_t = filt->ecg[middle] - filt->min_ecg;
+    uint32_t ppg_t = filt->ppg[middle] - filt->min_ecg;
+    PRECISE_LOG("selected %u = %hu - %hu\n", ecg_t, filt->ecg[middle], filt->min_ecg);
+    PRECISE_LOG("selected %u = %hu - %hu\n", ppg_t, filt->ppg[middle], filt->min_ppg);
     ecg_t = ecg_t * UINT_LEAST8_MAX / (uint32_t)(filt->max_ecg - filt->min_ecg);
     ppg_t = ppg_t * UINT_LEAST8_MAX / (uint32_t)(filt->max_ppg - filt->min_ppg);
     PRECISE_LOG("resized %u *= 1 / (%hu - %hu)\n",
@@ -127,7 +129,9 @@ static inline void adv_correction(adv_filter* filt)
 void adv_filter_input(adv_filter* filt, uint16_t data_ecg, uint16_t data_ppg)
 {
     TRACE_LOG("adv_filter_input\n");
-     (filt->fp)(filt, data_ecg, data_ppg);
+    data_ecg++;
+    data_ppg++;
+    (filt->fp)(filt, data_ecg, data_ppg);
     adv_min_max(filt, data_ecg, data_ppg);
     TRACE_LOG("adv_filter_input end\n");
 }
@@ -193,25 +197,25 @@ static inline void adv_min_max(adv_filter* filt, uint16_t data_ecg, uint16_t dat
     const uint16_t max_ecg_cmp = filt->max_ecg > data_ecg;
     const uint16_t max_ppg_cmp = filt->max_ppg > data_ppg;
     
-    PRECISE_LOG("min(%hu, %hu)", filt->min_ecg, data_ecg);
+    PRECISE_LOG("min_ecg(%hu, %hu)", filt->min_ecg, data_ecg);
     (min_ecg_cmp && (filt->min_ecg = filt->min_ecg)) || (filt->min_ecg = data_ecg);
     PRECISE_LOG(" = %hu ", filt->min_ecg);
     (min_ecg_cmp && (filt->min_ecg_it = filt->min_ecg_it)) || (filt->min_ecg_it = (filt->head - 1));
     PRECISE_LOG("(%zu)\n", filt->min_ecg_it);
     
-    PRECISE_LOG("min(%hu, %hu)", filt->min_ppg, data_ppg);
+    PRECISE_LOG("min_ppg(%hu, %hu)", filt->min_ppg, data_ppg);
     (min_ppg_cmp && (filt->min_ppg = filt->min_ppg)) || (filt->min_ppg = (data_ppg));
     PRECISE_LOG(" = %hu ", filt->min_ppg);
     (min_ppg_cmp && (filt->min_ppg_it = filt->min_ppg_it)) || (filt->min_ppg_it = (filt->head - 1));
     PRECISE_LOG("(%zu)\n", filt->min_ppg_it);
     
-    PRECISE_LOG("max(%hu, %hu)", filt->max_ecg, data_ecg);
+    PRECISE_LOG("max_ecg(%hu, %hu)", filt->max_ecg, data_ecg);
     (max_ecg_cmp && (filt->max_ecg = filt->max_ecg)) || (filt->max_ecg = data_ecg);
-    PRECISE_LOG(" = %hu ", filt->max_ppg);
+    PRECISE_LOG(" = %hu ", filt->max_ecg);
     (max_ecg_cmp && (filt->max_ecg_it = filt->max_ecg_it)) || (filt->max_ecg_it = (filt->head - 1));
-    PRECISE_LOG("(%zu)\n", filt->max_ppg_it);
+    PRECISE_LOG("(%zu)\n", filt->max_ecg_it);
     
-    PRECISE_LOG("max(%hu, %hu)", filt->max_ppg, data_ppg);
+    PRECISE_LOG("max_ppg(%hu, %hu)", filt->max_ppg, data_ppg);
     (max_ppg_cmp && (filt->max_ppg = filt->max_ppg)) || (filt->max_ppg = (data_ppg));
     PRECISE_LOG(" = %hu ", filt->max_ppg);
     (max_ppg_cmp && (filt->max_ppg_it = filt->max_ppg_it)) || (filt->max_ppg_it = (filt->head - 1));

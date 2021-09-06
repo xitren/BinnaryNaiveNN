@@ -21,7 +21,7 @@ int main(void)
     // Load the training set.
     DESCRIBE_LOG("Read started\n");
     build_data(&data, "tests/prep_data.txt", "\t", nips, nops);
-    DESCRIBE_LOG("Files readed\n");
+    DESCRIBE_LOG("Files readed %zu rows\n", data.rows);
 
     // Train, baby, train.
     DESCRIBE_LOG("Initialization started\n");
