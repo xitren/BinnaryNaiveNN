@@ -225,7 +225,7 @@ uint32_t uint8_to_uint32(uint8_t *data)
     {
         cast.c[i] = data[i];
     }
-    return cast.gt[i];
+    return cast.gt;
 }
 
 uint32_t floats_uint8_to_uint32(float *data)
@@ -236,7 +236,7 @@ uint32_t floats_uint8_to_uint32(float *data)
     {
         cast.c[i] = (uint8_t)data[i];
     }
-    return cast.gt[i];
+    return cast.gt;
 }
 
 uint32_t doubles_to_uint32(double *data)

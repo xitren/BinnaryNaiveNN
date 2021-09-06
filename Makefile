@@ -11,9 +11,16 @@ CC = gcc
 SRCREF = ref/Tinn.c src/logger.c src/data_reader.c
 SRC = src/neuron.c src/logger.c src/data_reader.c
 SRCBNN = src/bnn.c src/logger.c src/data_reader.c src/genetic_search.c
+FILTER = src/advanced_filter_ecg_ppg.c src/logger.c src/data_reader.c
 
 all:
 	$(CC) -o $(testBIN) $(SRC) $(CFLAGS) $(LDFLAGS)
+
+test_filter_work:
+	rm -f $(testBIN)
+	$(CC) -o $(testBIN) tests/1_work_run_filter.c $(FILTER) $(CFLAGS) $(INCLUDES) $(LDFLAGS)
+	./$(testBIN)
+	rm -f $(testBIN)
 
 test_ref_work:
 	rm -f $(testBIN)

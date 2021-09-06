@@ -43,7 +43,7 @@ uint16_t doubles_to_uint16(double *data);
 uint8_t floats_to_uint8(float *data);
 uint8_t doubles_to_uint8(double *data);
 uint32_t uint8_to_uint32(uint8_t *data);
-uint32_t floats_uint8_to_uint32(uint8_t *data);
+uint32_t floats_uint8_to_uint32(float *data);
 
 #ifdef __cplusplus
 }
