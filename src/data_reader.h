@@ -33,6 +33,8 @@ typedef struct _tag_data
 
 void build_data(data* data, const char* path, const char* separator, 
         const size_t nips, const size_t nops);
+void build_data_limit(data* data, const char* path, const char* separator, 
+        const size_t nips, const size_t nops, const size_t rows);
 void shuffle(const data* d);
 uint32_t floats_part_to_uint32(float *data, size_t n);
 uint32_t doubles_part_to_uint32(double *data, size_t n);

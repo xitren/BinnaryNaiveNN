@@ -17,10 +17,10 @@ extern "C" {
 #include <stdlib.h>
 #include <math.h>
 
-//#define MEMORY_STATIC
+#define MEMORY_STATIC
     
 #define POW2(val) (val * val)
-//#define INPUTS 1400
+#define INPUTS 1400
 #define LAYERS 2
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
@@ -42,7 +42,7 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS INPUTS
+    #define LAYER_IV_NEURONS 5
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
@@ -54,13 +54,13 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 64
+    #define LAYER_II_NEURONS 1
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 200
+    #define LAYER_I_NEURONS 1400
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif

@@ -37,7 +37,7 @@ static size_t lns(FILE* const file, size_t* max_string)
         {
             lines++;
             if (!(lines % 1000))
-                PRECISE_LOG("Lines found %zu\n", lines);
+                DESCRIBE_LOG("Lines found %zu\n", lines);
             if ((*max_string) < str_sz)
                 (*max_string) = str_sz;
             str_sz = 0;
@@ -162,8 +162,7 @@ void build_data(data* data, const char* path, const char* separator,
         return;
     }
     DESCRIBE_LOG("Countings rows\n");
-//    const size_t rows = lns(file, &max_line);
-    const size_t rows = 1000;
+    const size_t rows = lns(file, &max_line);
     DESCRIBE_LOG("Memory allocated\n");
     ndata(data, nips, nops, rows);
     DESCRIBE_LOG("Started data parsing\n");
@@ -173,7 +172,36 @@ void build_data(data* data, const char* path, const char* separator,
         parse(data, line, separator, row);
         free(line);
         if (!(row % 1000))
-            TRACE_LOG("Readed %d of %d\n", row, rows);
+            DESCRIBE_LOG("Readed %d of %d\n", row, rows);
+    }
+    DESCRIBE_LOG("\nend\n");
+    fclose(file);
+    shuffle(data);
+    return;
+}
+
+void build_data_limit(data* data, const char* path, const char* separator, 
+        const size_t nips, const size_t nops, const size_t rows)
+{
+    DESCRIBE_LOG("Opening data file\n");
+    size_t max_line = 150;
+    FILE* file = fopen(path, "r");
+    if(file == NULL)
+    {
+        ERROR_LOG("Could not open %s\n", path);
+        return;
+    }
+    DESCRIBE_LOG("Countings rows\n");
+    DESCRIBE_LOG("Memory allocated\n");
+    ndata(data, nips, nops, rows);
+    DESCRIBE_LOG("Started data parsing\n");
+    for(size_t row = 0; row < rows; row++)
+    {
+        char* line = readln(file, max_line);
+        parse(data, line, separator, row);
+        free(line);
+        if (!(row % 1000))
+            DESCRIBE_LOG("Readed %d of %d\n", row, rows);
     }
     DESCRIBE_LOG("\nend\n");
     fclose(file);
