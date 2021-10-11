@@ -73,7 +73,7 @@ int main(void)
 //            TRACE_LOG("Outputs: %f %f %f\n", net.outputs[0], net.outputs[1], net.outputs[2]);
             error += toterr(target, net.outputs, OUTPUTS);
         }
-        net.teaching_speed *= 0.99f;
+        net.teaching_speed *= 0.9f;
         DESCRIBE_LOG("%d) error %.12f :: learning rate %f\n",
             it,
             (double) error / data_result.rows,

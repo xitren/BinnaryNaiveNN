@@ -20,8 +20,8 @@ extern "C" {
 #define MEMORY_STATIC
     
 #define POW2(val) (val * val)
-#define INPUTS 1400
-#define LAYERS 2
+#define INPUTS 135
+#define LAYERS 5
 #if (LAYERS > 7)
     #error "More than 7 layers unsupported!"
 #endif
@@ -36,31 +36,31 @@ extern "C" {
     #endif
 #endif
 #if (LAYERS > 4)
-    #define LAYER_V_NEURONS 5
+    #define LAYER_V_NEURONS 1
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_V_NEURONS
     #endif
 #endif
 #if (LAYERS > 3)
-    #define LAYER_IV_NEURONS 5
+    #define LAYER_IV_NEURONS 4
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_IV_NEURONS
     #endif
 #endif
 #if (LAYERS > 2)
-    #define LAYER_III_NEURONS 32
+    #define LAYER_III_NEURONS 16
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_III_NEURONS
     #endif
 #endif
 #if (LAYERS > 1)
-    #define LAYER_II_NEURONS 1
+    #define LAYER_II_NEURONS 64
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_II_NEURONS
     #endif
 #endif
 #if (LAYERS > 0)
-    #define LAYER_I_NEURONS 1400
+    #define LAYER_I_NEURONS 128
     #ifndef OUTPUTS
         #define OUTPUTS LAYER_I_NEURONS
     #endif
